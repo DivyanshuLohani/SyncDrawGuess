@@ -1,0 +1,25 @@
+body {
+  background-color: rgb(148, 205, 255);
+}
+
+#titleScreen {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input label {
+  font-size: large;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none !important;
+}

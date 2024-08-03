@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game</title>
+    <link rel="stylesheet" href="/css/game.css" />
+  </head>
+  <body>
+    <div id="titleScreen">
+      <div class="input">
+        <label for="name"> Name </label>
+        <input type="text" id="name" />
+        <input id="color" type="color" />
+        <button id="joingame">Join Game</button>
+      </div>
+    </div>
+
+    <div id="game">
+      <div class="left"></div>
+      <div class="gameCanvas">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="right"></div>
+    </div>
+
+    <script src="/game.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+</html>
