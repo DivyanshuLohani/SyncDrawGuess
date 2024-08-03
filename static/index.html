@@ -6,9 +6,16 @@
     <title>Document</title>
   </head>
   <body>
+    <canvas id="canvas"></canvas>
+
+    <script src="/game.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      var socket = io();
+      let socket = io();
+      socket.on("hello", (event) => {
+        console.log(event);
+        socket.emit("hi", "This is a message from client");
+      });
     </script>
   </body>
 </html>
