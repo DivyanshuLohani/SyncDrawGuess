@@ -25,11 +25,10 @@ enum GameEvent {
 export function setupSocket(io: Server) {
   io.on(GameEvent.CONNECT, (socket: Socket) => {
     console.log("A user connected:", socket.id);
-
     socket.on(
       GameEvent.JOIN_ROOM,
       async (playerData: PlayerData, roomId?: string) => {
-        console.log(playerData);
+        console.log(playerData, roomId);
         if (!playerData) {
           socket.emit("error", "playerData is required");
           return;
@@ -43,7 +42,17 @@ export function setupSocket(io: Server) {
           let room = await getRoom(roomId);
           if (!room) {
             socket.emit("error", "Invalid Room ID");
+            return;
           }
+          room.players.push({
+            ...playerData,
+            score: 0,
+            playerId: socket.id,
+          });
+          await setRoom(roomId, room);
+
+          socket.join(roomId);
+          io.to(room.roomId).emit(GameEvent.JOINED_ROOM, room);
         }
       }
     );
@@ -60,9 +69,9 @@ export function setupSocket(io: Server) {
     });
 
     socket.on(GameEvent.DRAW, (data: any) => {
-      const { roomId, drawingData } = data;
-      socket.to(roomId).emit(GameEvent.DRAW, drawingData);
-      console.log(`Drawing data sent to room ${roomId}`);
+      const { roomId, data: drawData } = data;
+      console.log(`Draw data recieved from room ${roomId}`);
+      socket.to(roomId).emit(GameEvent.DRAW_DATA, drawData);
     });
 
     socket.on(GameEvent.GUESS, (data: any) => {

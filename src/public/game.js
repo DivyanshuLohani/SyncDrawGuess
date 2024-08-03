@@ -1,14 +1,27 @@
 const joinGameButton = document.getElementById("joingame");
 let socket = null;
+let roomId = null;
 
 joinGameButton.addEventListener("click", () => {
   const name = document.getElementById("name");
   const color = document.getElementById("color");
+  const roomIdQuery = document.getElementById("roomId").value;
+
   socket = io();
 
-  socket.emit("joinRoom", { name: name.value, color: color.value });
-  socket.on("joinedRoom", (data) => {
+  let params = [{ name: name.value, color: color.value }, roomIdQuery];
+  socket.emit("joinRoom", ...params);
+
+  socket.on("drawData", (data) => {
     console.log(data);
+    ctx.fillStyle = data[0];
+    ctx.lineTo(data[1], data[2]);
+    ctx.stroke();
+  });
+
+  socket.on("joinedRoom", (data) => {
+    roomId = data.roomId;
+    document.getElementById("roomid").textContent = data.roomId;
     initializeGame();
   });
 });
@@ -38,11 +51,10 @@ function draw(event) {
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  console.log(x);
-  console.log(y);
-
   ctx.lineTo(x, y);
   ctx.stroke();
+
+  socket.emit("draw", { roomId, data: ["#333344", x, y] });
 }
 
 canvas.addEventListener("mousedown", (e) => {

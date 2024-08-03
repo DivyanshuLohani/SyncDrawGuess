@@ -12,6 +12,7 @@
         <label for="name"> Name </label>
         <input type="text" id="name" />
         <input id="color" type="color" />
+        <input id="roomId" type="text" value="" />
         <button id="joingame">Join Game</button>
       </div>
     </div>
@@ -21,7 +22,9 @@
       <div class="gameCanvas">
         <canvas id="canvas"></canvas>
       </div>
-      <div class="right"></div>
+      <div class="right">
+        <span id="roomid"></span>
+      </div>
     </div>
 
     <script src="/game.js"></script>
