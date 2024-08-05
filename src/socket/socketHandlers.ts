@@ -15,6 +15,7 @@ enum GameEvent {
 
   // Server Events
   JOINED_ROOM = "joinedRoom",
+  PLAYER_JOINED = "playerJoined",
   LEFT_ROOM = "leftRoom",
   GAME_STARTED = "gameStarted",
   DRAW_DATA = "drawData",
@@ -31,6 +32,7 @@ export function setupSocket(io: Server) {
         console.log(playerData, roomId);
         if (!playerData) {
           socket.emit("error", "playerData is required");
+          socket.disconnect();
           return;
         }
         if (!roomId) {
@@ -42,17 +44,21 @@ export function setupSocket(io: Server) {
           let room = await getRoom(roomId);
           if (!room) {
             socket.emit("error", "Invalid Room ID");
+            socket.disconnect();
+
             return;
           }
-          room.players.push({
+          const player = {
             ...playerData,
             score: 0,
             playerId: socket.id,
-          });
+          };
+          room.players.push(player);
           await setRoom(roomId, room);
 
           socket.join(roomId);
-          io.to(room.roomId).emit(GameEvent.JOINED_ROOM, room);
+          socket.emit(GameEvent.JOINED_ROOM, room);
+          socket.to(room.roomId).emit(GameEvent.PLAYER_JOINED, player);
         }
       }
     );
@@ -68,9 +74,11 @@ export function setupSocket(io: Server) {
       console.log(`Game started in room ${roomId}`);
     });
 
-    socket.on(GameEvent.DRAW, (data: any) => {
+    socket.on(GameEvent.DRAW, async (data: any) => {
       const { roomId, data: drawData } = data;
-      console.log(`Draw data recieved from room ${roomId}`);
+      const room = await getRoom(roomId);
+      room?.gameState.drawingData.push(drawData);
+      await setRoom(roomId, room);
       socket.to(roomId).emit(GameEvent.DRAW_DATA, drawData);
     });
 

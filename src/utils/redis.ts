@@ -1,5 +1,6 @@
 import * as redis from "redis";
 import { promisify } from "util";
+import { Room } from "../types";
 
 const client = redis.createClient({
   url: "redis://localhost:6379",
@@ -16,7 +17,7 @@ client.connect().then(() => {
 const ROOM_PREFIX = "room:";
 const PLAYER_PREFIX = "player:";
 
-export async function getRoom(roomId: string) {
+export async function getRoom(roomId: string): Promise<Room | null> {
   const data = await client.get(`${ROOM_PREFIX}${roomId}`);
   return data ? JSON.parse(data) : null;
 }

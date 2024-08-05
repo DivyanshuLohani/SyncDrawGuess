@@ -23,3 +23,13 @@ body {
 .hidden {
   display: none !important;
 }
+
+#game {
+  display: flex;
+  justify-content: center;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+}

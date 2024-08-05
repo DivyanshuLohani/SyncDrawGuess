@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { setRoom } from "./redis";
-import { Player, PlayerData } from "../types";
+import { Player, PlayerData, Room } from "../types";
 
 export function generateRoomId() {
   return String("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").replace(
@@ -22,14 +22,15 @@ export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
     playerId: socket.id,
   };
 
-  const room = {
+  const room: Room = {
     roomId,
     creator: socket.id,
     players: [player],
     gameState: {
-      currentRound: 0,
-      drawingData: "",
+      currentRound: -1,
+      drawingData: [],
       guessedWords: [],
+      word: "",
     },
   };
 
