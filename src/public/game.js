@@ -1,15 +1,15 @@
 const joinGameButton = document.getElementById("joingame");
+const playerName = document.getElementById("name");
 let socket = null;
 let roomId = null;
 
 joinGameButton.addEventListener("click", () => {
-  const name = document.getElementById("name");
   const color = document.getElementById("color");
   const roomIdQuery = document.getElementById("roomId").value;
 
   socket = io();
 
-  let params = [{ name: name.value, color: color.value }, roomIdQuery];
+  let params = [{ name: playerName.value, color: color.value }, roomIdQuery];
   socket.emit("joinRoom", ...params);
 
   socket.on("drawData", draw);
@@ -22,6 +22,8 @@ joinGameButton.addEventListener("click", () => {
   });
 
   socket.on("playerJoined", addPlayer);
+  socket.on("playerLeft", removePlayer);
+  socket.on("guess", addChatMessage);
 });
 
 const canvas = document.getElementById("canvas");
@@ -96,10 +98,45 @@ canvas.addEventListener("scroll", (e) => {
   lineWidth += 1;
 });
 
+let players = [];
+const left = document.getElementById("playerNames");
+
 function addPlayer(playerData) {
+  players.push(playerData);
+
   const element = document.createElement("span");
   element.textContent = playerData.name;
   element.style.color = playerData.color;
-  const left = document.getElementById("playerNames");
   left.appendChild(element);
+}
+
+function removePlayer(playerData) {
+  players = players.filter((e) => e.playerId != playerData.playerId);
+  console.log(players);
+  const newChildren = players.map((p) => {
+    const element = document.createElement("span");
+    element.textContent = p.name;
+    element.style.color = p.color;
+    return element;
+  });
+
+  left.replaceChildren(...newChildren);
+}
+
+const chatF = document.getElementById("chat");
+const chatInp = document.getElementById("chatInput");
+const chatDiv = document.getElementById("chatdiv");
+
+chatF.addEventListener("submit", (e) => {
+  e.preventDefault();
+  let guess = chatInp.value;
+  socket.emit("guess", { roomId, guess });
+  addChatMessage({ name: playerName.value }, guess);
+  chatInp.value = "";
+});
+
+function addChatMessage(player, message) {
+  const element = document.createElement("span");
+  element.textContent = `${player.name}: ${message}`;
+  chatDiv.appendChild(element);
 }

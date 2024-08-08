@@ -1,12 +1,12 @@
 import { Server, Socket } from "socket.io";
-import { getRoom, setRoom } from "../utils/redis";
+import { deleteRoom, getRoom, setRoom } from "../utils/redis";
 import { generateEmptyRoom } from "../utils/gameController";
 import { PlayerData } from "../types";
 
 enum GameEvent {
   // CLient Events
   CONNECT = "connect",
-  DISCONNECT = "disconnect",
+  DISCONNECT = "disconnecting",
   JOIN_ROOM = "joinRoom",
   LEAVE_ROOM = "leaveRoom",
   START_GAME = "startGame",
@@ -16,7 +16,7 @@ enum GameEvent {
   // Server Events
   JOINED_ROOM = "joinedRoom",
   PLAYER_JOINED = "playerJoined",
-  LEFT_ROOM = "leftRoom",
+  PLAYER_LEFT = "playerLeft",
   GAME_STARTED = "gameStarted",
   DRAW_DATA = "drawData",
   GUESSED = "guessed",
@@ -63,12 +63,6 @@ export function setupSocket(io: Server) {
       }
     );
 
-    // socket.on(GameEvent.LEAVE_ROOM, (roomId: string) => {
-    //   socket.leave(roomId);
-    //   console.log(`User ${socket.id} left room ${roomId}`);
-    //   io.to(roomId).emit("message", `${socket.id} has left the room.`);
-    // });
-
     socket.on(GameEvent.START_GAME, (roomId: string) => {
       io.to(roomId).emit("gameStarted", { message: "The game has started!" });
       console.log(`Game started in room ${roomId}`);
@@ -82,15 +76,37 @@ export function setupSocket(io: Server) {
       socket.to(roomId).emit(GameEvent.DRAW_DATA, drawData);
     });
 
-    socket.on(GameEvent.GUESS, (data: any) => {
-      const { roomId, guess } = data;
-      socket.to(roomId).emit(GameEvent.GUESSED, guess);
+    socket.on(GameEvent.GUESS, async (data: any) => {
+      const { roomId, guess }: { roomId: string; guess: string } = data;
+      const room = await getRoom(roomId);
+      if (!room) return;
+      const player = room.players.find((e) => e.playerId == socket.id);
+      if (!player) return;
+      if (room.gameState.word === guess.toLowerCase()) {
+        // Word Guessed
+        // Returns player id
+        io.to(roomId).emit(GameEvent.GUESSED, socket.id);
+      } else {
+        socket.to(roomId).emit(GameEvent.GUESS, player, guess);
+      }
+
       console.log(`Guess "${guess}" sent to room ${roomId}`);
     });
 
-    socket.on(GameEvent.DISCONNECT, () => {
+    socket.on(GameEvent.DISCONNECT, async () => {
       console.log("User disconnected:", socket.id);
-      // const rooms = await getRooms
+      const roomId = Array.from(socket.rooms)[1];
+      const room = await getRoom(roomId);
+      if (!room) return;
+      const player = room.players.find((e) => e.playerId === socket.id);
+      if (!player) return;
+      room.players = room.players.filter((e) => e.playerId != socket.id);
+      if (room.players.length === 0) {
+        await deleteRoom(roomId);
+        return;
+      }
+      await setRoom(roomId, room);
+      socket.to(roomId).emit(GameEvent.PLAYER_LEFT, player);
     });
   });
 }

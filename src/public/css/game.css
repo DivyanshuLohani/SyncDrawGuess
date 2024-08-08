@@ -33,3 +33,6 @@ body {
   display: flex;
   flex-direction: column;
 }
+#chatdiv span {
+  display: block;
+}
