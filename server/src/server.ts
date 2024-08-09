@@ -2,16 +2,23 @@ import express from "express";
 import { Server } from "socket.io";
 import http from "http";
 import path from "path";
-import { Room } from "./types";
+import cors from "cors";
 import { setupSocket } from "./socket/socketHandlers";
 
 const publicDirectoryPath = path.join(__dirname, "/public");
 
 const app = express();
-app.use(express.static(publicDirectoryPath));
-
 const server = http.createServer(app);
-const io = new Server(server);
+app.use(cors());
+
+// app.use(express.static(publicDirectoryPath));
+
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 setupSocket(io);
 
 server.listen(8000, function () {

@@ -1,5 +1,41 @@
-function App() {
-  return <></>;
-}
+import React, { useEffect, useState } from "react";
+import { GameEvent, Room } from "./types";
+import { socket } from "./socketHandler";
+import JoinGameForm from "./components/JoinGameForm";
+import Game from "./components/Game";
 
-export default App;
+const Home: React.FC = () => {
+  const [room, setRoom] = useState<Room | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  // const navigate = useNavigate();
+
+  function handleRoomJoin(room: Room) {
+    setRoom(room);
+  }
+
+  useEffect(() => {
+    function onConnect() {
+      console.log("Connected to server");
+    }
+
+    function onDisconnect() {
+      console.log("Disconnected from server");
+    }
+
+    socket.on("connect", onConnect);
+
+    socket.on("disconnect", onDisconnect);
+
+    socket.on(GameEvent.JOINED_ROOM, handleRoomJoin);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off(GameEvent.JOINED_ROOM, handleRoomJoin);
+    };
+  }, []);
+
+  return room ? <Game room={room} /> : <JoinGameForm />;
+};
+
+export default Home;
