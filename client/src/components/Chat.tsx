@@ -2,25 +2,53 @@ import { useEffect, useRef, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent, Player, Room } from "../types";
 
-interface Message {
+enum MessageType {
+  Guess = "guess",
+  PlayerLeft = "playerLeft",
+  PlayerJoin = "playerJoin",
+  WordGuessed = "wordGuessed",
+  GuessClose = "guessClose",
+}
+interface IMessage {
   sender: string;
   message: string;
+  type: MessageType;
 }
 
 const Chat = ({ room }: { room: Room }) => {
   const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
 
   function addMessageToChat(message: string, player: Player) {
-    setMessages([...messages, { sender: player.name, message }]);
+    setMessages([
+      ...messages,
+      { sender: player.name, message, type: MessageType.Guess },
+    ]);
+  }
+
+  function addPlayerJoinMessage(player: Player) {
+    setMessages([
+      ...messages,
+      { sender: player.name, message: "", type: MessageType.PlayerJoin },
+    ]);
+  }
+  function addPlayerLeftMessage(player: Player) {
+    setMessages([
+      ...messages,
+      { sender: player.name, message: "", type: MessageType.PlayerLeft },
+    ]);
   }
 
   useEffect(() => {
     socket.on(GameEvent.GUESS, addMessageToChat);
+    socket.on(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
+    socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
 
     return () => {
       socket.off(GameEvent.GUESS, addMessageToChat);
+      socket.off(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
+      socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
     };
   });
 
@@ -46,9 +74,7 @@ const Chat = ({ room }: { room: Room }) => {
       <h2 className="text-xl font-semibold mb-4">Chat</h2>
       <div className="h-80 overflow-y-auto mb-4" ref={messagesBottomDiv}>
         {messages.map((msg, index) => (
-          <div key={index} className="mb-2">
-            <b>{msg.sender}:</b> <span>{msg.message}</span>
-          </div>
+          <Message key={index} message={msg} />
         ))}
       </div>
 
@@ -71,6 +97,54 @@ const Chat = ({ room }: { room: Room }) => {
       </form>
     </div>
   );
+};
+
+const Message = ({ message }: { message: IMessage }) => {
+  let content = (
+    <>
+      <b>{message.sender}</b> <span>{message.message}</span>
+    </>
+  );
+  let bgColor = "bg-white";
+
+  switch (message.type) {
+    case MessageType.PlayerJoin:
+      bgColor = " bg-gray-100";
+      content = (
+        <span className="text-green-500">{message.sender} joined the game</span>
+      );
+      break;
+    case MessageType.PlayerLeft:
+      bgColor = " bg-gray-100";
+
+      content = (
+        <span className="text-red-500 bg-gray-100">
+          {message.sender} left the game
+        </span>
+      );
+      break;
+
+    case MessageType.WordGuessed:
+      bgColor = " bg-gray-100";
+      content = (
+        <span className="text-green-500">
+          {message.sender} has guessed the word
+        </span>
+      );
+      break;
+    case MessageType.GuessClose:
+      bgColor = " bg-gray-100";
+      content = (
+        <span className="text-yellow-900 bg-gray-100">
+          '{message.message}' is close
+        </span>
+      );
+      break;
+    default:
+      break;
+  }
+
+  return <div className={`mb-1 rounded-md ${bgColor}`}>{content}</div>;
 };
 
 export default Chat;
