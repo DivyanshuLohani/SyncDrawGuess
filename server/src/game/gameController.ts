@@ -20,6 +20,8 @@ export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
     ...host,
     score: 0,
     playerId: socket.id,
+    guessed: false,
+    guessedAt: null,
   };
 
   const room: Room = {

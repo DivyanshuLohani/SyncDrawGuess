@@ -134,7 +134,7 @@ export function setupSocket(io: Server) {
 
     socket.on(GameEvent.DISCONNECT, async () => {
       console.log("User disconnected:", socket.id);
-      const roomId = Array.from(socket.rooms)[1];
+      const roomId = Array.from(socket.rooms)[1] as string;
       const room = await getRoom(roomId);
       if (!room) return;
       const player = room.players.find((e) => e.playerId === socket.id);

@@ -14,6 +14,6 @@ const server = http.createServer(app);
 const io = new Server(server);
 setupSocket(io);
 
-server.listen(3000, function () {
-  console.log("listening on *:3000");
+server.listen(8000, function () {
+  console.log("listening on *:8000");
 });
