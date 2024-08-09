@@ -105,7 +105,7 @@ export function setupSocket(io: Server) {
         await setRoom(roomId, room);
         io.to(roomId).emit(GameEvent.GUESSED, socket.id);
       } else {
-        socket.to(roomId).emit(GameEvent.GUESS, player, guess);
+        io.to(roomId).emit(GameEvent.GUESS, guess, player);
       }
 
       console.log(`Guess "${guess}" sent to room ${roomId}`);

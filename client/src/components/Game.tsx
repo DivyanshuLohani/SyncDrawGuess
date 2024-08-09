@@ -1,4 +1,3 @@
-import React from "react";
 import PlayerScores from "./PlayerScroes";
 import GameCanvas from "./GameCanvas";
 import Chat from "./Chat";
@@ -13,7 +12,7 @@ const Game = ({ room }: { room: Room }) => {
         <GameCanvas />
         <RoomLink roomId={room.roomId} />
       </div>
-      <Chat />
+      <Chat room={room} />
     </div>
   );
 };
