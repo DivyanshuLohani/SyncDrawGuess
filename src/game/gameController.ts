@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { setRoom } from "./redis";
+import { setRoom } from "../utils/redis";
 import { Player, PlayerData, Room } from "../types";
 
 export function generateRoomId() {
@@ -27,10 +27,18 @@ export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
     creator: socket.id,
     players: [player],
     gameState: {
-      currentRound: -1,
+      currentRound: 0,
       drawingData: [],
       guessedWords: [],
       word: "",
+      currentPlayer: 0,
+    },
+    settings: {
+      players: 3,
+      rounds: 3,
+      drawTime: 60,
+      customWords: [],
+      onlyCustomWords: false,
     },
   };
 

@@ -1,9 +1,10 @@
 import { Server, Socket } from "socket.io";
 import { deleteRoom, getRoom, setRoom } from "../utils/redis";
-import { generateEmptyRoom } from "../utils/gameController";
-import { PlayerData } from "../types";
+import { generateEmptyRoom } from "../game/gameController";
+import { PlayerData, SettingValue } from "../types";
+import { startGame } from "../game/roomController";
 
-enum GameEvent {
+export enum GameEvent {
   // CLient Events
   CONNECT = "connect",
   DISCONNECT = "disconnecting",
@@ -12,6 +13,7 @@ enum GameEvent {
   START_GAME = "startGame",
   DRAW = "draw",
   GUESS = "guess",
+  CHANGE_SETTIING = "changeSettings",
 
   // Server Events
   JOINED_ROOM = "joinedRoom",
@@ -20,7 +22,10 @@ enum GameEvent {
   GAME_STARTED = "gameStarted",
   DRAW_DATA = "drawData",
   GUESSED = "guessed",
-  // GUESS_CLOSE = "guessClose"
+  TURN_END = "turnEnded",
+  CHOOSE_WORD = "chooseWord",
+  WORD_CHOSEN = "wordChosen",
+  SETTINGS_CHANGED = "settingsChanged",
 }
 
 export function setupSocket(io: Server) {
@@ -52,6 +57,8 @@ export function setupSocket(io: Server) {
             ...playerData,
             score: 0,
             playerId: socket.id,
+            guessed: false,
+            guessedAt: null,
           };
           room.players.push(player);
           await setRoom(roomId, room);
@@ -63,14 +70,22 @@ export function setupSocket(io: Server) {
       }
     );
 
-    socket.on(GameEvent.START_GAME, (roomId: string) => {
-      io.to(roomId).emit("gameStarted", { message: "The game has started!" });
-      console.log(`Game started in room ${roomId}`);
+    socket.on(GameEvent.START_GAME, async (roomId: string) => {
+      const room = await getRoom(roomId);
+      if (!room) return;
+      if (room.gameState.currentRound != 0)
+        return socket.emit("error", "Game already started");
+      if (socket.id != room.creator)
+        return socket.emit("error", "You cannot start the game");
+
+      await startGame(room, io);
     });
 
     socket.on(GameEvent.DRAW, async (data: any) => {
       const { roomId, data: drawData } = data;
       const room = await getRoom(roomId);
+      if (!room) return;
+      if (room.gameState.currentPlayer ?? "" != socket.id) return;
       room?.gameState.drawingData.push(drawData);
       await setRoom(roomId, room);
       socket.to(roomId).emit(GameEvent.DRAW_DATA, drawData);
@@ -85,12 +100,36 @@ export function setupSocket(io: Server) {
       if (room.gameState.word === guess.toLowerCase()) {
         // Word Guessed
         // Returns player id
+        player.guessed = true;
+        player.guessedAt = new Date();
+        await setRoom(roomId, room);
         io.to(roomId).emit(GameEvent.GUESSED, socket.id);
       } else {
         socket.to(roomId).emit(GameEvent.GUESS, player, guess);
       }
 
       console.log(`Guess "${guess}" sent to room ${roomId}`);
+    });
+
+    socket.on(GameEvent.CHANGE_SETTIING, async (data: any) => {
+      const { roomId, setting, value } = data;
+      const room = await getRoom(roomId);
+      if (!room) return;
+      switch (setting) {
+        case SettingValue.players:
+          room.settings.players = value;
+          break;
+        case SettingValue.drawTime:
+          room.settings.drawTime = value;
+        case SettingValue.rounds:
+          room.settings.rounds = value;
+
+        default:
+          socket.emit("error", "Invalid setting value");
+          break;
+      }
+      await setRoom(roomId, room);
+      io.to(roomId).emit(GameEvent.SETTINGS_CHANGED, setting, value);
     });
 
     socket.on(GameEvent.DISCONNECT, async () => {

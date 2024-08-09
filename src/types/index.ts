@@ -6,6 +6,8 @@ export interface PlayerData {
 export interface Player extends PlayerData {
   playerId: string;
   score: number;
+  guessed: boolean;
+  guessedAt: Date | null;
 }
 
 export interface GameState {
@@ -13,6 +15,23 @@ export interface GameState {
   drawingData: string[];
   guessedWords: string[];
   word: string;
+  currentPlayer: number;
+}
+
+export interface Settings {
+  players: number;
+  drawTime: number;
+  rounds: number;
+  onlyCustomWords: boolean;
+  customWords: string[];
+}
+
+export enum SettingValue {
+  players = "players",
+  drawTime = "drawTime",
+  rounds = "rounds",
+  // onlyCustomWords: boolean;
+  // customWords: string[];
 }
 
 export interface Room {
@@ -20,9 +39,5 @@ export interface Room {
   creator: string; // Player ID of the creator of the room
   players: Player[]; // List of players in the room
   gameState: GameState; // Current state of the game
-  settings?: {
-    maxPlayers?: number; // Optional maximum number of players
-    nRounds?: number; // number of rounds
-    roundDuration?: number; // Optional duration of each round (in seconds)
-  };
+  settings: Settings;
 }
