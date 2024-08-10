@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
-import { GameEvent, Room } from "../types";
+import { GameEvent } from "../types";
 import { socket } from "../socketHandler";
+import { useRoom } from "../context/RoomContext";
 
-const GameHeader = ({ room }: { room: Room }) => {
-  const [timer, setTimer] = useState<number>(room.settings.drawTime);
+const GameHeader = () => {
   const [word, setWord] = useState("");
   const [interval, startInterval] = useState<NodeJS.Timeout | null>(null);
+  const { settings } = useRoom();
+  const [timer, setTimer] = useState<number>(settings.drawTime);
 
   function initTimer(word?: string) {
-    setTimer(room.settings.drawTime);
-    if (!interval)
-      startInterval(
-        setInterval(() => {
-          if (timer > 0) {
-            setTimer((e) => (e > 0 ? e - 1 : e));
-          }
-        }, 1000)
-      );
+    if (interval) clearInterval(interval);
+    setTimer(settings.drawTime);
+    startInterval(
+      setInterval(() => {
+        if (timer > 0) {
+          setTimer((e) => (e > 0 ? e - 1 : e));
+        }
+      }, 1000)
+    );
 
     if (word) setWord(word);
   }

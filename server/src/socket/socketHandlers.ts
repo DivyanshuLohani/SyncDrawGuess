@@ -22,6 +22,7 @@ export enum GameEvent {
   PLAYER_JOINED = "playerJoined",
   PLAYER_LEFT = "playerLeft",
   GAME_STARTED = "gameStarted",
+  GAME_ENDED = "gameEnded",
   DRAW_DATA = "drawData",
   GUESSED = "guessed",
   TURN_END = "turnEnded",
@@ -114,7 +115,6 @@ export function setupSocket(io: Server) {
     socket.on(
       GameEvent.CHANGE_SETTIING,
       async (setting: string, value: number) => {
-        // const { setting, value } = data;
         const room = await getRoom(socket);
         if (!room) return;
         switch (setting) {
@@ -123,8 +123,10 @@ export function setupSocket(io: Server) {
             break;
           case SettingValue.drawTime:
             room.settings.drawTime = value;
+            break;
           case SettingValue.rounds:
             room.settings.rounds = value;
+            break;
 
           default:
             socket.emit("error", "Invalid setting value");

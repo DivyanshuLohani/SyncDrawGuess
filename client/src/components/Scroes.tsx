@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent, Room } from "../types";
+import { useRoom } from "../context/RoomContext";
 
 export default function Scroes() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [word, setWord] = useState<string>("");
-  const [waiting, setWaiting] = useState(false);
+  const [waiting, setWaiting] = useState(true);
+  const { currentPlayer } = useRoom();
 
   function show() {
     setIsOpen(true);
@@ -16,7 +18,7 @@ export default function Scroes() {
     setWaiting(false);
   }
 
-  function turnEnd(room: Room, word: string) {
+  function turnEnd(_room: Room, word: string) {
     setIsOpen(true);
     setWord(word);
     setTimeout(() => {
@@ -42,7 +44,14 @@ export default function Scroes() {
     <div className="absolute top-0 left-0 bg-black w-full h-full bg-opacity-50 flex items-center justify-center z-50 gap-5">
       {waiting ? (
         <span className="font-bold text-white text-2xl">
-          Wait for player to choose a word
+          <span
+            style={{
+              color: currentPlayer?.color,
+            }}
+          >
+            {currentPlayer?.name}
+          </span>{" "}
+          is choosing a word
         </span>
       ) : (
         <span className="font-bold text-white text-2xl">

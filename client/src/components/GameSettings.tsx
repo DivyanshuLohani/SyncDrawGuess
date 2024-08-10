@@ -16,9 +16,9 @@ const GameSettings: React.FC<GameSettingsProps> = ({
   onClose,
 }) => {
   // State for settings
-  const [numPlayers, setNumPlayers] = useState<number>(2);
-  const [drawingTime, setDrawingTime] = useState<number>(20);
-  const [rounds, setRounds] = useState<number>(1);
+  const [numPlayers, setNumPlayers] = useState<number>(settings.players);
+  const [drawingTime, setDrawingTime] = useState<number>(settings.drawTime);
+  const [rounds, setRounds] = useState<number>(settings.rounds);
 
   useEffect(() => {
     function handleSettingChange(setting: string, value: number) {
@@ -107,7 +107,6 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               id="numPlayers"
               value={numPlayers}
               onChange={handleNumPlayersChange}
-              defaultValue={settings.players}
               disabled={!isOwner}
               className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
             >
@@ -129,7 +128,6 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               id="drawingTime"
               value={drawingTime}
               onChange={handleDrawingTimeChange}
-              defaultValue={settings.drawTime}
               disabled={!isOwner}
               className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
             >
@@ -151,7 +149,6 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               id="rounds"
               value={rounds}
               onChange={handleRoundsChange}
-              defaultValue={settings.rounds}
               disabled={!isOwner}
               className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
             >

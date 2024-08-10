@@ -3,6 +3,7 @@ import { GameEvent, Room } from "./types";
 import { socket } from "./socketHandler";
 import JoinGameForm from "./components/JoinGameForm";
 import Game from "./components/Game";
+import { RoomProvider } from "./context/RoomContext";
 
 const Home: React.FC = () => {
   const [room, setRoom] = useState<Room | null>(null);
@@ -33,7 +34,11 @@ const Home: React.FC = () => {
     };
   }, []);
 
-  return room ? <Game room={room} /> : <JoinGameForm />;
+  return (
+    <RoomProvider>
+      {room ? <Game room={room} /> : <JoinGameForm />}
+    </RoomProvider>
+  );
 };
 
 export default Home;

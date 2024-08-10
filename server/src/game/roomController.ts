@@ -30,6 +30,10 @@ export async function endRound(roomId: string, io: Server) {
   } else {
     room.gameState.currentRound += 1;
     room.gameState.currentPlayer = 0;
+    if (room.gameState.currentRound > room.settings.rounds) {
+      return await endGame(roomId, io);
+    }
+    await setRoom(roomId, room);
   }
   room.gameState.drawingData = [];
   room.players = room.players.map((e) => {
@@ -174,5 +178,5 @@ export async function endGame(roomId: string, io: Server) {
   room.gameState.word = "";
   room.gameState.guessedWords = [];
   await setRoom(roomId, room);
-  // io.to(roomId).emit(GameEvent.)
+  io.to(roomId).emit(GameEvent.GAME_ENDED, room);
 }
