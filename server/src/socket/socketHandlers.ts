@@ -3,7 +3,7 @@ import { deleteRoom, setRoom, getRoom as gR } from "../utils/redis";
 import { getRoom } from "../game/gameController";
 import { generateEmptyRoom } from "../game/gameController";
 import { PlayerData, SettingValue } from "../types";
-import { startGame, wordSelected } from "../game/roomController";
+import { guessWord, startGame, wordSelected } from "../game/roomController";
 
 export enum GameEvent {
   // CLient Events
@@ -28,6 +28,7 @@ export enum GameEvent {
   CHOOSE_WORD = "chooseWord",
   WORD_CHOSEN = "wordChosen",
   SETTINGS_CHANGED = "settingsChanged",
+  GUESS_FAIL = "guessFail",
 }
 
 export function setupSocket(io: Server) {
@@ -102,18 +103,7 @@ export function setupSocket(io: Server) {
       const { guess }: { guess: string } = data;
       const room = await getRoom(socket);
       if (!room) return;
-      const player = room.players.find((e) => e.playerId == socket.id);
-      if (!player) return;
-      if (room.gameState.word === guess.toLowerCase()) {
-        // Word Guessed
-        // Returns player id
-        player.guessed = true;
-        player.guessedAt = new Date();
-        await setRoom(room.roomId, room);
-        io.to(room.roomId).emit(GameEvent.GUESSED, socket.id);
-      } else {
-        io.to(room.roomId).emit(GameEvent.GUESS, guess, player);
-      }
+      await guessWord(room, guess, socket, io);
     });
 
     socket.on(GameEvent.WORD_SELECT, async (word: string) => {

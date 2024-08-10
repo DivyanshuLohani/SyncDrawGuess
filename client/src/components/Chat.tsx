@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "../socketHandler";
-import { GameEvent, Player, Room } from "../types";
+import { GameEvent, Player } from "../types";
+import playerGuessAudio from "../sounds/playerGuess.wav";
 
 enum MessageType {
   Guess = "guess",
@@ -16,10 +17,11 @@ interface IMessage {
   type: MessageType;
 }
 
-const Chat = ({ room }: { room: Room }) => {
+const Chat = () => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<IMessage[]>([]);
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
+  const playerGuess = new Audio(playerGuessAudio);
 
   function addMessageToChat(message: string, player: Player) {
     setMessages([
@@ -47,23 +49,39 @@ const Chat = ({ room }: { room: Room }) => {
     ]);
   }
 
+  function addGuessedMessage(player: Player) {
+    playerGuess.play();
+    setMessages([
+      ...messages,
+      {
+        sender: player.name,
+        message: "has guessed the word",
+        type: MessageType.WordGuessed,
+      },
+    ]);
+  }
+
   useEffect(() => {
     socket.on(GameEvent.GUESS, addMessageToChat);
+    socket.on(GameEvent.GUESSED, addGuessedMessage);
     socket.on(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
     socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+    socket.on(GameEvent.GUESSED, addGuessedMessage);
     socket.on("error", addErrorMessage);
 
     return () => {
       socket.off(GameEvent.GUESS, addMessageToChat);
       socket.off(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
       socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+      socket.off(GameEvent.GUESSED, addGuessedMessage);
+
       socket.off("error", addErrorMessage);
     };
   });
 
   const handleSend = () => {
     if (message.trim()) {
-      socket.emit(GameEvent.GUESS, { roomId: room.roomId, guess: message });
+      socket.emit(GameEvent.GUESS, { guess: message });
       setMessage("");
     }
   };
@@ -144,7 +162,7 @@ const Message = ({ message }: { message: IMessage }) => {
       bgColor = " bg-gray-100";
       content = (
         <span className="text-green-500">
-          {message.sender} has guessed the word
+          <b>{message.sender}</b> has guessed the word
         </span>
       );
       break;

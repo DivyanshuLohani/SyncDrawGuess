@@ -48,7 +48,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
     socket.on(GameEvent.TURN_END, setTurn);
 
     return () => {
-      // socket.off(GameEvent.DRAW_DATA, draw);
+      socket.off(GameEvent.DRAW_DATA, draw);
       socket.off(GameEvent.GAME_STARTED, setTurn);
       socket.off(GameEvent.TURN_END, setTurn);
     };

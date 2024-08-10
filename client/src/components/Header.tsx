@@ -16,10 +16,16 @@ const GameHeader = ({ room }: { room: Room }) => {
     if (word) setWord(word);
   }
 
+  function endTurn() {
+    setWord("");
+  }
+
   useEffect(() => {
     socket.on(GameEvent.WORD_CHOSEN, initTimer);
+    socket.on(GameEvent.TURN_END, endTurn);
     return () => {
       socket.off(GameEvent.WORD_CHOSEN, initTimer);
+      socket.off(GameEvent.TURN_END, endTurn);
     };
   });
 

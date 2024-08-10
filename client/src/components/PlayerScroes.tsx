@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GameEvent, Player } from "../types";
+import { GameEvent, Player, Room } from "../types";
 import { socket } from "../socketHandler";
 import joinAudio from "../sounds/playerJoin.wav";
 import leaveAudio from "../sounds/playerLeft.wav";
@@ -28,13 +28,19 @@ const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
     playerLeftAudio.play();
   }
 
+  function roundEnd(room: Room) {
+    setDisplayers(room.players);
+  }
+
   useEffect(() => {
     socket.on(GameEvent.PLAYER_JOINED, addPlayer);
     socket.on(GameEvent.PLAYER_LEFT, removePlayer);
+    socket.on(GameEvent.TURN_END, roundEnd);
 
     return () => {
       socket.off(GameEvent.PLAYER_JOINED, addPlayer);
       socket.off(GameEvent.PLAYER_LEFT, removePlayer);
+      socket.off(GameEvent.TURN_END, roundEnd);
     };
   });
 

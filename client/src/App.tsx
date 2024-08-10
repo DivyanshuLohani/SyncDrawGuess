@@ -6,8 +6,6 @@ import Game from "./components/Game";
 
 const Home: React.FC = () => {
   const [room, setRoom] = useState<Room | null>(null);
-  const [timer, setTimer] = useState<number>(0);
-  // const navigate = useNavigate();
 
   function handleRoomJoin(room: Room) {
     setRoom(room);

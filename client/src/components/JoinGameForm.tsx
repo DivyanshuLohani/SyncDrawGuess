@@ -21,6 +21,7 @@ export default function JoinGameForm() {
       return;
     }
 
+    if (!socket.connected) socket.connect();
     socket.emit("joinRoom", { name, color }, roomId ?? undefined);
   };
 

@@ -6,6 +6,7 @@ import RoomLink from "./RoomLink";
 import { useState } from "react";
 import GameSettings from "./GameSettings";
 import WordSelector from "./WordSelector";
+import IsChoosingWord from "./IsChoosingWord";
 
 const Game = ({ room }: { room: Room }) => {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(
@@ -27,10 +28,11 @@ const Game = ({ room }: { room: Room }) => {
           isOpen={settingsOpen}
           onClose={toggleSettings}
         />
+        <IsChoosingWord />
         <WordSelector />
         <RoomLink roomId={room.roomId} />
       </div>
-      <Chat room={room} />
+      <Chat />
     </div>
   );
 };
