@@ -6,7 +6,7 @@ import RoomLink from "./RoomLink";
 import { useState } from "react";
 import GameSettings from "./GameSettings";
 import WordSelector from "./WordSelector";
-import IsChoosingWord from "./IsChoosingWord";
+import IsChoosingWord from "./Scroes";
 
 const Game = ({ room }: { room: Room }) => {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(

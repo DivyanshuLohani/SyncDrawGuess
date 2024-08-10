@@ -35,3 +35,13 @@ export function getRandomWords(n: number = 1): Promise<string[]> {
     });
   });
 }
+export function convertToUnderscores(phrase) {
+  const words = phrase.split(" ");
+  const underscores = words.map((word) => {
+    return word
+      .split("")
+      .map(() => "_")
+      .join(" ");
+  });
+  return underscores.join("   ");
+}

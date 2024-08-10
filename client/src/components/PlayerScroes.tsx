@@ -30,6 +30,7 @@ const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
 
   function roundEnd(room: Room) {
     setDisplayers(room.players);
+    console.log(room.players);
   }
 
   useEffect(() => {

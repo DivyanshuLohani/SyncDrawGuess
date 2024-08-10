@@ -2,11 +2,12 @@ import { Server, Socket } from "socket.io";
 import { Room } from "../types";
 import { getRoom, setRoom } from "../utils/redis";
 import { GameEvent } from "../socket/socketHandlers";
-import { getRandomWords } from "../utils/word";
+import { convertToUnderscores, getRandomWords } from "../utils/word";
 
 const DRAWER_POINTS = 50;
 const BONUS_PER_GUESS = 20;
 const MAX_WORD_SELECT_TIME = 30 * 1000; // 30s
+const timers = new Map();
 
 export async function startGame(room: Room, io: Server) {
   room.gameState.currentRound = 1;
@@ -20,6 +21,10 @@ export async function startGame(room: Room, io: Server) {
 export async function endRound(roomId: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
+  if (timers.get(roomId)) {
+    clearTimeout(timers.get(roomId));
+    timers.delete(roomId);
+  }
   if (room.gameState.currentPlayer + 1 < room.players.length) {
     room.gameState.currentPlayer += 1;
   } else {
@@ -88,7 +93,7 @@ export async function nextRound(roomId: string, io: Server) {
   const words = await getRandomWords(3);
   io.to(currentPlayer.playerId).emit(GameEvent.CHOOSE_WORD, words);
 
-  setTimeout(async () => {
+  const timeOut = setTimeout(async () => {
     const room = await getRoom(roomId);
     if (!room) return;
     if (room.gameState.word != "") return;
@@ -97,21 +102,30 @@ export async function nextRound(roomId: string, io: Server) {
     const randomWord = words[Math.floor(Math.random() * words.length)];
     await wordSelected(roomId, randomWord, io);
   }, MAX_WORD_SELECT_TIME);
+  timers.set(roomId, timeOut);
 }
 
 export async function wordSelected(roomId: string, word: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
-
+  if (timers.get(roomId)) {
+    clearTimeout(timers.get(roomId));
+    timers.delete(roomId);
+  }
   room.gameState.word = word;
   await setRoom(roomId, room);
   const player = room.players[room.gameState.currentPlayer];
+  if (!player) return;
   io.to(player.playerId).emit(GameEvent.WORD_CHOSEN, word);
-  io.to(room.roomId).except(player.playerId).emit(GameEvent.WORD_CHOSEN);
+  const word_blank = convertToUnderscores(word);
+  io.to(room.roomId)
+    .except(player.playerId)
+    .emit(GameEvent.WORD_CHOSEN, word_blank);
 
-  setTimeout(async () => {
+  const timeOut = setTimeout(async () => {
     await endRound(roomId, io);
   }, room.settings.drawTime * 1000);
+  timers.set(roomId, timeOut);
 }
 
 export async function givePoints(room: Room) {
@@ -133,7 +147,7 @@ export async function givePoints(room: Room) {
   playersWhoGuessed.forEach((player, index) => {
     const timePenalty = Math.max(
       0,
-      now.getTime() - new Date(player.guessedAt ?? "").getTime() / 10000
+      now.getTime() - new Date(player.guessedAt ?? "").getTime() / 10
     );
     const points = Math.max(200 - timePenalty, 0);
     player.score += points;

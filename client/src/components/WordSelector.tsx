@@ -32,7 +32,7 @@ export default function WordSelector() {
   if (!isOpen) return;
 
   return (
-    <div className="absolute top-0 left-0 bg-black w-full h-full bg-opacity-50 flex items-center justify-center z-50 gap-5">
+    <div className="absolute top-0 left-0 bg-black w-full h-full bg-opacity-50 flex items-center justify-center z-10 gap-5">
       {words.map((e) => {
         return (
           <button

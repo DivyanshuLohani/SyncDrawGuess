@@ -9,6 +9,7 @@ enum MessageType {
   PlayerJoin = "playerJoin",
   WordGuessed = "wordGuessed",
   GuessClose = "guessClose",
+  WordChoosen = "wordChosen",
   Error = "error",
 }
 interface IMessage {
@@ -24,6 +25,7 @@ const Chat = () => {
   const playerGuess = new Audio(playerGuessAudio);
 
   function addMessageToChat(message: string, player: Player) {
+    if (player.guessed && player.playerId != socket.id) return;
     setMessages([
       ...messages,
       { sender: player.name, message, type: MessageType.Guess },

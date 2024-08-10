@@ -37,7 +37,6 @@ export function setupSocket(io: Server) {
     socket.on(
       GameEvent.JOIN_ROOM,
       async (playerData: PlayerData, roomId?: string) => {
-        console.log(playerData, roomId);
         if (!playerData) {
           socket.emit("error", "playerData is required");
           socket.disconnect();
