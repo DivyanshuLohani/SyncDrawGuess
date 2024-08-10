@@ -8,6 +8,7 @@ export enum GameEvent {
   DRAW = "draw",
   GUESS = "guess",
   CHANGE_SETTIING = "changeSettings",
+  WORD_SELECT = "wordSelect",
 
   // Server Events
   JOINED_ROOM = "joinedRoom",
@@ -34,9 +35,17 @@ export interface Player extends PlayerData {
   guessedAt: Date | null;
 }
 
+export interface DrawData {
+  brushColor: string;
+  brushRadius: number;
+  points: {
+    x: number;
+    y: number;
+  }[];
+}
 export interface GameState {
   currentRound: number;
-  drawingData: string[];
+  drawingData: DrawData[];
   guessedWords: string[];
   word: string;
   currentPlayer: number;

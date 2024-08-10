@@ -39,7 +39,7 @@ const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
   });
 
   return (
-    <div className="w-1/4 bg-white p-4 shadow-md border-r border-gray-300">
+    <div className="w-full md:w-1/4 bg-white p-4 shadow-md border-r border-gray-300">
       <h2 className="text-xl font-semibold mb-4">Players</h2>
       <div className="space-y-4">
         {displayers.map((player, index) => (

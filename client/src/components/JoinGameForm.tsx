@@ -26,10 +26,7 @@ export default function JoinGameForm() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold mb-6">
-        Join the Game
-        {/* {roomId ? "Joined Room " + roomId : "Join the Game"} */}
-      </h1>
+      <h1 className="text-4xl font-bold mb-6">Join the Game</h1>
       <div className="w-full max-w-md p-6 bg-white shadow-md rounded-lg">
         <div className="mb-4">
           <label
@@ -58,7 +55,7 @@ export default function JoinGameForm() {
             id="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md"
+            className="w-full border border-gray-300 rounded-md"
           />
         </div>
         <button

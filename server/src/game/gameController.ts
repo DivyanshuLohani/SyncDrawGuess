@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { setRoom } from "../utils/redis";
 import { Player, PlayerData, Room } from "../types";
+import { getRoom as gR } from "../utils/redis";
 
 export function generateRoomId() {
   return String("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").replace(
@@ -46,4 +47,12 @@ export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
 
   await setRoom(roomId, room);
   return roomId;
+}
+
+export async function getRoom(socket: Socket) {
+  if (!socket) return null;
+  const roomId = Array.from(socket.rooms)[1] as string;
+  if (!roomId) return null;
+  const room = await gR(roomId);
+  return room;
 }

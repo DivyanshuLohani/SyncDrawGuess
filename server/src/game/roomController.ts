@@ -20,15 +20,15 @@ export async function startGame(room: Room, io: Server) {
 export async function endRound(roomId: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
-  if (room.gameState.currentPlayer < room.players.length) {
-    room.gameState.currentPlayer += 1;
+  if (room.gameState.currentPlayer + 1 < room.players.length) {
+    room.gameState.currentPlayer = room.gameState.currentPlayer + 1;
   } else {
-    room.gameState.currentRound += 1;
+    room.gameState.currentRound = room.gameState.currentRound + 1;
     room.gameState.currentPlayer = 0;
   }
   room.gameState.drawingData = [];
   await givePoints(room);
-  io.to(room.roomId).emit(GameEvent.TURN_END, room.players);
+  io.to(room.roomId).emit(GameEvent.TURN_END, room);
   if (room.gameState.currentRound >= room.settings.rounds) {
     await endGame(roomId, io);
   }
@@ -61,12 +61,13 @@ export async function wordSelected(roomId: string, word: string, io: Server) {
 
   room.gameState.word = word;
   await setRoom(roomId, room);
-
-  io.emit(GameEvent.WORD_CHOSEN, word);
+  const player = room.players[room.gameState.currentPlayer];
+  io.to(player.playerId).emit(GameEvent.WORD_CHOSEN, word);
+  io.to(room.roomId).except(player.playerId).emit(GameEvent.WORD_CHOSEN);
 
   setTimeout(async () => {
     await endRound(roomId, io);
-  }, room.settings?.drawTime);
+  }, room.settings.drawTime * 1000);
 }
 
 export async function givePoints(room: Room) {

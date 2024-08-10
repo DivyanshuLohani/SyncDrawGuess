@@ -8,6 +8,7 @@ enum MessageType {
   PlayerJoin = "playerJoin",
   WordGuessed = "wordGuessed",
   GuessClose = "guessClose",
+  Error = "error",
 }
 interface IMessage {
   sender: string;
@@ -39,16 +40,24 @@ const Chat = ({ room }: { room: Room }) => {
       { sender: player.name, message: "", type: MessageType.PlayerLeft },
     ]);
   }
+  function addErrorMessage(message: string) {
+    setMessages([
+      ...messages,
+      { sender: "", message, type: MessageType.Error },
+    ]);
+  }
 
   useEffect(() => {
     socket.on(GameEvent.GUESS, addMessageToChat);
     socket.on(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
     socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+    socket.on("error", addErrorMessage);
 
     return () => {
       socket.off(GameEvent.GUESS, addMessageToChat);
       socket.off(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
       socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+      socket.off("error", addErrorMessage);
     };
   });
 
@@ -121,6 +130,13 @@ const Message = ({ message }: { message: IMessage }) => {
         <span className="text-red-500 bg-gray-100">
           {message.sender} left the game
         </span>
+      );
+      break;
+    case MessageType.Error:
+      bgColor = " bg-gray-100";
+
+      content = (
+        <span className="text-red-500 bg-gray-100">{message.message}</span>
       );
       break;
 

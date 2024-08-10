@@ -1,11 +1,28 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { GameEvent, Room } from "../types";
+import { socket } from "../socketHandler";
 
-interface GameHeaderProps {
-  timer: string; // Time in a string format (e.g., "01:30")
-  word: string; // The current word
-}
+const GameHeader = ({ room }: { room: Room }) => {
+  const [timer, setTimer] = useState<number>(room.settings.drawTime);
+  const [word, setWord] = useState("");
 
-const GameHeader: React.FC<GameHeaderProps> = ({ timer, word }) => {
+  function initTimer(word?: string) {
+    setTimer(room.settings.drawTime);
+    setInterval(() => {
+      if (timer > 0) {
+        setTimer((e) => e - 1);
+      }
+    }, 1000);
+    if (word) setWord(word);
+  }
+
+  useEffect(() => {
+    socket.on(GameEvent.WORD_CHOSEN, initTimer);
+    return () => {
+      socket.off(GameEvent.WORD_CHOSEN, initTimer);
+    };
+  });
+
   return (
     <div className="w-full bg-blue-500 text-white py-2 px-4 flex items-center justify-between">
       <span className="text-lg font-semibold">{timer}</span>
