@@ -3,7 +3,12 @@ import { deleteRoom, setRoom, getRoom as gR } from "../utils/redis";
 import { getRoom } from "../game/gameController";
 import { generateEmptyRoom } from "../game/gameController";
 import { PlayerData, SettingValue } from "../types";
-import { guessWord, startGame, wordSelected } from "../game/roomController";
+import {
+  endGame,
+  guessWord,
+  startGame,
+  wordSelected,
+} from "../game/roomController";
 
 export enum GameEvent {
   // CLient Events
@@ -53,7 +58,11 @@ export function setupSocket(io: Server) {
           if (!room) {
             socket.emit("error", "Invalid Room ID");
             socket.disconnect();
-
+            return;
+          }
+          if (room.players.length >= room.settings.players) {
+            socket.emit("error", "The room you're trying to join is full");
+            socket.disconnect();
             return;
           }
           const player = {
@@ -118,6 +127,8 @@ export function setupSocket(io: Server) {
     socket.on(
       GameEvent.CHANGE_SETTIING,
       async (setting: string, value: number) => {
+        if (typeof value != "number")
+          return socket.emit("error", "Invalid Value");
         const room = await getRoom(socket);
         if (!room) return;
         switch (setting) {
@@ -151,12 +162,16 @@ export function setupSocket(io: Server) {
         await deleteRoom(room.roomId);
         return;
       }
+
       if (room.creator === player.playerId) {
         room.creator = room.players[0].playerId;
       }
-
       await setRoom(room.roomId, room);
       socket.to(room.roomId).emit(GameEvent.PLAYER_LEFT, player);
+      if (room.players.length === 1 && room.gameState.currentRound >= 1) {
+        // No players left in the room
+        await endGame(room.roomId, io);
+      }
     });
   });
 }

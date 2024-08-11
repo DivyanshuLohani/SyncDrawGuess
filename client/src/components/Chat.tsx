@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent, Player } from "../types";
 import playerGuessAudio from "../sounds/playerGuess.wav";
+import { useRoom } from "../context/RoomContext";
 
 enum MessageType {
   Guess = "guess",
@@ -23,6 +24,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
   const playerGuess = new Audio(playerGuessAudio);
+  const { currentPlayer } = useRoom();
 
   function addMessageToChat(message: string, player: Player) {
     if (player.guessed && player.playerId != socket.id) return;
@@ -62,21 +64,39 @@ const Chat = () => {
       },
     ]);
   }
+  function addWordChosen() {
+    if (!currentPlayer) return;
+    setMessages([
+      ...messages,
+      {
+        sender: currentPlayer.name,
+        message: "is now drawing",
+        type: MessageType.WordChoosen,
+      },
+    ]);
+  }
+
+  function clearChat() {
+    setMessages([]);
+  }
 
   useEffect(() => {
+    socket.on(GameEvent.GAME_STARTED, clearChat);
     socket.on(GameEvent.GUESS, addMessageToChat);
     socket.on(GameEvent.GUESSED, addGuessedMessage);
     socket.on(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
     socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
     socket.on(GameEvent.GUESSED, addGuessedMessage);
+    socket.on(GameEvent.WORD_CHOSEN, addWordChosen);
     socket.on("error", addErrorMessage);
 
     return () => {
+      socket.on(GameEvent.GAME_STARTED, clearChat);
       socket.off(GameEvent.GUESS, addMessageToChat);
       socket.off(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
       socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
       socket.off(GameEvent.GUESSED, addGuessedMessage);
-
+      socket.off(GameEvent.WORD_CHOSEN, addWordChosen);
       socket.off("error", addErrorMessage);
     };
   });
@@ -165,6 +185,14 @@ const Message = ({ message }: { message: IMessage }) => {
       content = (
         <span className="text-green-500">
           <b>{message.sender}</b> has guessed the word
+        </span>
+      );
+      break;
+    case MessageType.WordChoosen:
+      bgColor = " bg-gray-100";
+      content = (
+        <span className="text-green-500">
+          <b>{message.sender}</b> {message.message}
         </span>
       );
       break;

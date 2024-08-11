@@ -9,6 +9,13 @@ const BONUS_PER_GUESS = 10;
 const MAX_WORD_SELECT_TIME = 30 * 1000; // 30s
 const timers = new Map();
 
+function clearTimers(roomId: string) {
+  if (timers.get(roomId)) {
+    clearTimeout(timers.get(roomId));
+    timers.delete(roomId);
+  }
+}
+
 export async function startGame(room: Room, io: Server) {
   room.gameState.currentRound = 1;
   room.gameState.currentPlayer = 0;
@@ -22,10 +29,7 @@ export async function endRound(roomId: string, io: Server) {
   let room = await getRoom(roomId);
   if (!room) return;
 
-  if (timers.get(roomId)) {
-    clearTimeout(timers.get(roomId));
-    timers.delete(roomId);
-  }
+  clearTimers(room.roomId);
   room.gameState.currentPlayer += 1;
 
   // Check if playerCounter needs to be incremented
@@ -43,7 +47,6 @@ export async function endRound(roomId: string, io: Server) {
   room.players = room.players.map((e) => {
     return { ...e, guessed: false, guessedAt: null };
   });
-
   await setRoom(roomId, room);
 
   io.to(room.roomId).emit(GameEvent.TURN_END, room, room.gameState.word);
@@ -122,10 +125,7 @@ export async function nextRound(roomId: string, io: Server) {
 export async function wordSelected(roomId: string, word: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
-  if (timers.get(roomId)) {
-    clearTimeout(timers.get(roomId));
-    timers.delete(roomId);
-  }
+  clearTimers(room.roomId);
   room.gameState.word = word;
   await setRoom(roomId, room);
   const player = room.players[room.gameState.currentPlayer];
@@ -178,6 +178,8 @@ export async function givePoints(roomId: string) {
 export async function endGame(roomId: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
+
+  clearTimers(room.roomId);
 
   room.gameState.currentRound = 0;
   room.gameState.word = "";

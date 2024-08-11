@@ -5,15 +5,11 @@ import joinAudio from "../sounds/playerJoin.wav";
 import leaveAudio from "../sounds/playerLeft.wav";
 import { useRoom } from "../context/RoomContext";
 
-interface PlayerScoresProps {
-  players: Player[];
-}
-
-const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
+const PlayerScores: React.FC = () => {
   const playerJoinAudio = new Audio(joinAudio);
   const playerLeftAudio = new Audio(leaveAudio);
+  const { currentPlayer, currentRound, settings, creator, players } = useRoom();
   const [displayers, setDisplayers] = useState<Player[]>(players);
-  const { currentRound, settings } = useRoom();
 
   function addPlayer(player: Player) {
     setDisplayers((p) => {
@@ -46,24 +42,39 @@ const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
   });
 
   return (
-    <div className="w-full md:w-1/4 bg-white p-4 shadow-md border-r border-gray-300">
-      <h2 className="text-xl font-semibold mb-4">Players</h2>
+    <div className="w-full md:w-1/4 bg-white py-4 shadow-md border-r border-gray-300">
+      <h2 className="text-xl font-semibold mb-4 px-4">Players</h2>
       {currentRound > 0 && (
-        <h2 className="text-lg mb-4">
+        <h2 className="text-lg mb-4 px-4">
           Round {currentRound} of {settings.rounds}
         </h2>
       )}
-      <div className="space-y-4">
+      <div className="">
         {displayers.map((player, index) => (
-          <div key={index} className="flex items-center justify-between">
+          <div
+            key={index}
+            className={`flex items-center justify-between bg-blend-darken py-2 px-4 ${
+              currentPlayer && currentPlayer.playerId === player.playerId
+                ? "bg-slate-200"
+                : ""
+            }`}
+          >
             <div className="flex items-center space-x-2">
+              <span className="text-slate-500">
+                #
+                {players
+                  .sort((a, b) => b.score - a.score)
+                  .findIndex((p) => p.playerId === player.playerId) + 1}
+              </span>
               <span
                 className="block w-4 h-4 rounded-full"
                 style={{ backgroundColor: player.color }}
               ></span>
               <span className="font-medium">{player.name}</span>
             </div>
-            <span className="font-medium">{player.score}</span>
+            <span className="font-medium">
+              {player.playerId === creator && <span> ♚ </span>} {player.score}
+            </span>
           </div>
         ))}
       </div>

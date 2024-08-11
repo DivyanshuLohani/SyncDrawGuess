@@ -9,6 +9,7 @@ const Home: React.FC = () => {
   const [room, setRoom] = useState<Room | null>(null);
 
   function handleRoomJoin(room: Room) {
+    console.log("Message");
     setRoom(room);
   }
 

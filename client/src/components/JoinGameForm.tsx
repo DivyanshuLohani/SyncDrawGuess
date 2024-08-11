@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socketHandler";
+import { GameEvent } from "../types";
 
 export default function JoinGameForm() {
   const [name, setName] = useState<string>("");
   const [color, setColor] = useState<string>("#000000");
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     // Function to get query parameters from the URL
@@ -13,6 +15,11 @@ export default function JoinGameForm() {
     if (roomIdFromUrl) {
       setRoomId(roomIdFromUrl);
     }
+    socket.on("error", setError);
+
+    return () => {
+      socket.off("error", setError);
+    };
   }, []);
 
   const handleJoin = () => {
@@ -22,13 +29,14 @@ export default function JoinGameForm() {
     }
 
     if (!socket.connected) socket.connect();
-    socket.emit("joinRoom", { name, color }, roomId ?? undefined);
+    socket.emit(GameEvent.JOIN_ROOM, { name, color }, roomId ?? undefined);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-4xl font-bold mb-6">Join the Game</h1>
       <div className="w-full max-w-md p-6 bg-white shadow-md rounded-lg">
+        {error && <span className="text-red-500">{error}</span>}
         <div className="mb-4">
           <label
             htmlFor="name"

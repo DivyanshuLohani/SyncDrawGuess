@@ -55,7 +55,7 @@ const GameSettings: React.FC = () => {
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.players,
-      event.target.value
+      parseInt(event.target.value, 10)
     );
   };
 
@@ -68,7 +68,7 @@ const GameSettings: React.FC = () => {
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.drawTime,
-      event.target.value
+      parseInt(event.target.value, 10)
     );
   };
 

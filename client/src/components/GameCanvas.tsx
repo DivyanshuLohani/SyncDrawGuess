@@ -28,6 +28,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
   function clear() {
     if (!canvasRef || !canvasRef.current) return;
     canvasRef.current.clear();
+    setDrawData([]);
   }
 
   useEffect(() => {
