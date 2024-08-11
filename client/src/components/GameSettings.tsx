@@ -1,27 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { GameEvent, Settings, SettingValue } from "../types";
+import { GameEvent, SettingValue } from "../types";
 import { socket } from "../socketHandler";
+import { useRoom } from "../context/RoomContext";
 
-interface GameSettingsProps {
-  creator: string;
-  settings: Settings;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const GameSettings: React.FC<GameSettingsProps> = ({
-  creator,
-  settings,
-  isOpen,
-  onClose,
-}) => {
+const GameSettings: React.FC = () => {
+  const { settings, creator, currentRound } = useRoom();
+  const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
   // State for settings
   const [numPlayers, setNumPlayers] = useState<number>(settings.players);
   const [drawingTime, setDrawingTime] = useState<number>(settings.drawTime);
   const [rounds, setRounds] = useState<number>(settings.rounds);
+  const { changeSetting } = useRoom();
 
   useEffect(() => {
-    function handleSettingChange(setting: string, value: number) {
+    function handleSettingChange(setting: SettingValue, value: number) {
+      changeSetting(setting, value.toString());
       switch (setting) {
         case SettingValue.players:
           setNumPlayers(value);
@@ -39,12 +32,18 @@ const GameSettings: React.FC<GameSettingsProps> = ({
     }
     socket.on(GameEvent.SETTINGS_CHANGED, handleSettingChange);
     socket.on(GameEvent.GAME_STARTED, onClose);
+    socket.on(GameEvent.GAME_ENDED, handleEnd);
 
     return () => {
       socket.off(GameEvent.SETTINGS_CHANGED, handleSettingChange);
       socket.off(GameEvent.GAME_STARTED, onClose);
+      socket.off(GameEvent.GAME_ENDED, handleEnd);
     };
   });
+
+  function onClose() {
+    setIsOpen(false);
+  }
 
   // Handlers
   const handleNumPlayersChange = (
@@ -80,7 +79,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.rounds,
-      event.target.value
+      parseInt(event.target.value)
     );
   };
   const isOwner = creator === socket.id;
@@ -88,6 +87,12 @@ const GameSettings: React.FC<GameSettingsProps> = ({
   const handleStart = () => {
     if (socket.id != creator) return;
     socket.emit(GameEvent.START_GAME);
+  };
+
+  const handleEnd = () => {
+    setTimeout(() => {
+      setIsOpen(true);
+    }, 10000);
   };
 
   if (!isOpen) return null;

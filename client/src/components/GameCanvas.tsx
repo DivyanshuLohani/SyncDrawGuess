@@ -4,6 +4,7 @@ import { socket } from "../socketHandler";
 import { DrawData, GameEvent, Room } from "../types";
 import Toolbar from "./Toolbar";
 import CanvasDraw from "react-canvas-draw";
+import { useRoom } from "../context/RoomContext";
 
 const GameCanvas = ({ room }: { room: Room }) => {
   const canvasRef = useRef<CanvasDraw>(null);
@@ -12,21 +13,8 @@ const GameCanvas = ({ room }: { room: Room }) => {
   const [drawData, setDrawData] = useState<DrawData[]>(
     room.gameState.drawingData
   );
-  const [ismyTurn, setIsmyTrun] = useState<boolean>(() => {
-    if (room.gameState.currentRound === 0) return false;
-    const currentPlayer = room.players[room.gameState.currentPlayer];
-    if (currentPlayer.playerId === socket.id) return true;
-    return false;
-  });
 
-  function setTurn(room: Room) {
-    setDrawData([]);
-    canvasRef.current?.clear();
-    if (room.gameState.currentRound === 0) return setIsmyTrun(false);
-    const currentPlayer = room.players[room.gameState.currentPlayer];
-    if (currentPlayer.playerId === socket.id) return setIsmyTrun(true);
-    return setIsmyTrun(false);
-  }
+  const { myTurn: ismyTurn } = useRoom();
 
   function draw(data: DrawData) {
     if (!canvasRef || !canvasRef.current) return;
@@ -37,20 +25,18 @@ const GameCanvas = ({ room }: { room: Room }) => {
     if (!canvasRef || !canvasRef.current) return;
     canvasRef.current.undo();
   }
-  // function clear() {
-  //   if (!canvasRef || !canvasRef.current) return;
-  //   canvasRef.current.clear();
-  // }
+  function clear() {
+    if (!canvasRef || !canvasRef.current) return;
+    canvasRef.current.clear();
+  }
 
   useEffect(() => {
     socket.on(GameEvent.DRAW_DATA, draw);
-    socket.on(GameEvent.GAME_STARTED, setTurn);
-    socket.on(GameEvent.TURN_END, setTurn);
+    socket.on(GameEvent.TURN_END, clear);
 
     return () => {
       socket.off(GameEvent.DRAW_DATA, draw);
-      socket.off(GameEvent.GAME_STARTED, setTurn);
-      socket.off(GameEvent.TURN_END, setTurn);
+      socket.off(GameEvent.TURN_END, clear);
     };
   });
 
@@ -61,7 +47,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
 
   return (
     <div className="flex-1 bg-gray-100 p-4 flex flex-col">
-      <GameHeader room={room} />
+      <GameHeader />
       <div className="flex-1 flex items-center justify-center mt-4">
         <div className="w-full bg-white border border-gray-300 rounded-lg shadow-md">
           <CanvasDraw

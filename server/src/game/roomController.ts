@@ -21,28 +21,29 @@ export async function startGame(room: Room, io: Server) {
 export async function endRound(roomId: string, io: Server) {
   let room = await getRoom(roomId);
   if (!room) return;
+
   if (timers.get(roomId)) {
     clearTimeout(timers.get(roomId));
     timers.delete(roomId);
   }
-  if (room.gameState.currentPlayer + 1 < room.players.length) {
-    room.gameState.currentPlayer += 1;
-  } else {
+  room.gameState.currentPlayer += 1;
+
+  // Check if playerCounter needs to be incremented
+  if (room.gameState.currentPlayer >= room.players.length) {
+    // Round end
     room.gameState.currentRound += 1;
     room.gameState.currentPlayer = 0;
-    if (room.gameState.currentRound > room.settings.rounds) {
-      return await endGame(roomId, io);
-    }
-    await setRoom(roomId, room);
   }
-  await givePoints(roomId);
+  await setRoom(roomId, room);
 
+  await givePoints(roomId);
   room = await getRoom(roomId);
   if (!room) return;
   room.gameState.drawingData = [];
   room.players = room.players.map((e) => {
     return { ...e, guessed: false, guessedAt: null };
   });
+
   await setRoom(roomId, room);
 
   io.to(room.roomId).emit(GameEvent.TURN_END, room, room.gameState.word);
@@ -50,8 +51,8 @@ export async function endRound(roomId: string, io: Server) {
   await setRoom(roomId, room);
 
   setTimeout(async () => {
-    if (room.gameState.currentRound >= room.settings.rounds) {
-      await endGame(roomId, io);
+    if (room.gameState.currentRound > room.settings.rounds) {
+      return await endGame(roomId, io);
     }
     await nextRound(roomId, io);
   }, 5000);
@@ -100,6 +101,7 @@ export async function nextRound(roomId: string, io: Server) {
   const room = await getRoom(roomId);
   if (!room) return;
   const currentPlayer = room.players[room.gameState.currentPlayer];
+  if (!currentPlayer) return;
 
   // Get random words
   const words = await getRandomWords(3);
@@ -166,10 +168,10 @@ export async function givePoints(roomId: string) {
       player.score += 0;
     }
   });
-
-  room.players[room.gameState.currentPlayer].score +=
+  const currentPlayer = room.players[room.gameState.currentPlayer];
+  if (!currentPlayer) return;
+  currentPlayer.score +=
     DRAWER_POINTS + playersWhoGuessed.length * BONUS_PER_GUESS;
-  console.log(room);
   await setRoom(room.roomId, room);
 }
 

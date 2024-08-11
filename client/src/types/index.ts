@@ -15,6 +15,7 @@ export enum GameEvent {
   PLAYER_JOINED = "playerJoined",
   PLAYER_LEFT = "playerLeft",
   GAME_STARTED = "gameStarted",
+  GAME_ENDED = "gameEnded",
   DRAW_DATA = "drawData",
   GUESSED = "guessed",
   TURN_END = "turnEnded",

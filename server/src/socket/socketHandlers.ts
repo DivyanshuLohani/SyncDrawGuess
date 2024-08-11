@@ -93,7 +93,10 @@ export function setupSocket(io: Server) {
     socket.on(GameEvent.DRAW, async (drawData: any) => {
       const room = await getRoom(socket);
       if (!room) return;
-      if (room.gameState.currentPlayer ?? "" != socket.id) return;
+      if (room.gameState.currentRound === 0) return;
+      const currentPlayer = room.players[room.gameState.currentPlayer];
+      if (!currentPlayer) return;
+      if (currentPlayer.playerId != socket.id) return;
       room.gameState.drawingData.push(drawData);
       await setRoom(room.roomId, room);
       socket.to(room.roomId).emit(GameEvent.DRAW_DATA, drawData);
