@@ -103,7 +103,7 @@ export function setupSocket(io: Server) {
       const { guess }: { guess: string } = data;
       const room = await getRoom(socket);
       if (!room) return;
-      await guessWord(room, guess, socket, io);
+      await guessWord(room.roomId, guess, socket, io);
     });
 
     socket.on(GameEvent.WORD_SELECT, async (word: string) => {
