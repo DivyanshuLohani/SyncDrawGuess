@@ -3,6 +3,7 @@ import { GameEvent, Player, Room } from "../types";
 import { socket } from "../socketHandler";
 import joinAudio from "../sounds/playerJoin.wav";
 import leaveAudio from "../sounds/playerLeft.wav";
+import { useRoom } from "../context/RoomContext";
 
 interface PlayerScoresProps {
   players: Player[];
@@ -11,8 +12,8 @@ interface PlayerScoresProps {
 const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
   const playerJoinAudio = new Audio(joinAudio);
   const playerLeftAudio = new Audio(leaveAudio);
-
   const [displayers, setDisplayers] = useState<Player[]>(players);
+  const { currentRound, settings } = useRoom();
 
   function addPlayer(player: Player) {
     setDisplayers((p) => {
@@ -47,6 +48,11 @@ const PlayerScores: React.FC<PlayerScoresProps> = ({ players }) => {
   return (
     <div className="w-full md:w-1/4 bg-white p-4 shadow-md border-r border-gray-300">
       <h2 className="text-xl font-semibold mb-4">Players</h2>
+      {currentRound > 0 && (
+        <h2 className="text-lg mb-4">
+          Round {currentRound} of {settings.rounds}
+        </h2>
+      )}
       <div className="space-y-4">
         {displayers.map((player, index) => (
           <div key={index} className="flex items-center justify-between">
