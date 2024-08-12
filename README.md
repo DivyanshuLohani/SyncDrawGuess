@@ -80,3 +80,5 @@ The frontend is developed using React with TypeScript and Vite for a fast develo
     http://localhost:5173
     
 ## Preview
+()[https://github.com/user-attachments/assets/3c92e898-b9be-43ed-99f4-e02371018176]
+
