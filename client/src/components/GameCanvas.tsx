@@ -62,9 +62,8 @@ const GameCanvas = ({ room }: { room: Room }) => {
             brushRadius={lineWidth}
             canvasWidth={800}
             canvasHeight={600}
-            className="w-full h-full border border-gray-300"
+            className="border border-gray-300"
             hideInterface={!ismyTurn}
-            style={{ zIndex: 0 }}
           />
           <Toolbar
             onLineWidthChange={setLineWidth}

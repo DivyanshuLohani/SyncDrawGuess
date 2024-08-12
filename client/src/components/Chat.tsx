@@ -119,7 +119,7 @@ const Chat = () => {
   }, [messages]);
 
   return (
-    <div className="w-1/4 bg-white p-4 shadow-md border-l border-gray-300">
+    <div className="w-full md:w-1/4 bg-white p-4 shadow-md border-l border-gray-300">
       <h2 className="text-xl font-semibold mb-4">Chat</h2>
       <div className="h-80 overflow-y-auto mb-4" ref={messagesBottomDiv}>
         {messages.map((msg, index) => (
