@@ -83,10 +83,10 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   }
 
   function setTurn(room: Room) {
-    setRoom(room);
     const cP = room.players[room.gameState.currentPlayer] || null;
     if (cP && socket.id === cP.playerId) setIsmyTrun(true);
     else setIsmyTrun(false);
+    joinedRoom(room);
   }
 
   function changeSetting(setting: SettingValue, value: string) {
@@ -114,15 +114,15 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   useEffect(() => {
     socket.on(GameEvent.JOINED_ROOM, joinedRoom);
     socket.on(GameEvent.TURN_END, setTurn);
-    socket.on(GameEvent.GAME_STARTED, setRoom);
-    socket.on(GameEvent.GAME_ENDED, setRoom);
+    socket.on(GameEvent.GAME_STARTED, joinedRoom);
+    socket.on(GameEvent.GAME_ENDED, joinedRoom);
     socket.on(GameEvent.PLAYER_JOINED, addPlayer);
     socket.on(GameEvent.PLAYER_LEFT, removePlayer);
 
     return () => {
       socket.off(GameEvent.JOINED_ROOM, joinedRoom);
-      socket.off(GameEvent.GAME_STARTED, setRoom);
-      socket.off(GameEvent.GAME_ENDED, setRoom);
+      socket.off(GameEvent.GAME_STARTED, joinedRoom);
+      socket.off(GameEvent.GAME_ENDED, joinedRoom);
       socket.off(GameEvent.TURN_END, setTurn);
       socket.off(GameEvent.PLAYER_JOINED, addPlayer);
       socket.off(GameEvent.PLAYER_LEFT, removePlayer);
