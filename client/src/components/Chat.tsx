@@ -24,7 +24,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
   const playerGuess = new Audio(playerGuessAudio);
-  const { currentPlayer } = useRoom();
+  const { currentPlayer, me } = useRoom();
 
   function addMessageToChat(message: string, player: Player) {
     if (player.guessed && player.playerId != socket.id) return;
@@ -79,6 +79,13 @@ const Chat = () => {
   function clearChat() {
     setMessages([]);
   }
+
+  useEffect(() => {
+    if (me) {
+      addPlayerJoinMessage(me);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     socket.on(GameEvent.GAME_STARTED, clearChat);

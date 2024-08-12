@@ -28,6 +28,7 @@ interface RoomContextValue {
   changeSetting: (setting: SettingValue, value: string) => void;
   setRoom: (room: Room) => void; // Optional: function to update the room context
   myTurn: boolean;
+  me: Player | null;
 }
 const RoomContext = createContext<RoomContextValue | undefined>(undefined);
 
@@ -65,6 +66,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     },
   });
   const [myTurn, setIsmyTrun] = useState(true);
+  const [me, setMe] = useState<Player | null>(null);
 
   function addPlayer(player: Player) {
     setRoom((p) => {
@@ -104,9 +106,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     }
     setRoom({ ...room, settings });
   }
+  function joinedRoom(room: Room) {
+    setRoom(room);
+    setMe(room.players.find((p) => p.playerId === socket.id) ?? null);
+  }
 
   useEffect(() => {
-    socket.on(GameEvent.JOINED_ROOM, setRoom);
+    socket.on(GameEvent.JOINED_ROOM, joinedRoom);
     socket.on(GameEvent.TURN_END, setTurn);
     socket.on(GameEvent.GAME_STARTED, setRoom);
     socket.on(GameEvent.GAME_ENDED, setRoom);
@@ -114,7 +120,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     socket.on(GameEvent.PLAYER_LEFT, removePlayer);
 
     return () => {
-      socket.off(GameEvent.JOINED_ROOM, setRoom);
+      socket.off(GameEvent.JOINED_ROOM, joinedRoom);
       socket.off(GameEvent.GAME_STARTED, setRoom);
       socket.off(GameEvent.GAME_ENDED, setRoom);
       socket.off(GameEvent.TURN_END, setTurn);
@@ -138,6 +144,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     currentPlayer,
     changeSetting,
     myTurn,
+    me,
   };
 
   return (
