@@ -1,9 +1,11 @@
 import * as redis from "redis";
 import { promisify } from "util";
 import { Room } from "../types";
+import { configDotenv } from "dotenv";
+configDotenv();
 
 const client = redis.createClient({
-  url: "redis://localhost:6379",
+  url: process.env.REDDIS_URL,
 });
 
 client.on("error", (err) => {
