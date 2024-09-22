@@ -1,6 +1,6 @@
-# Skribbl.io Clone
+# Sync Draw Guess
 
-A real-time drawing and guessing game inspired by Skribbl.io, built with Node.js, React, and TypeScript. Players join rooms, draw, and guess words within a time limit.
+A real-time, multiplayer drawing and guessing game built using Node.js, Socket.IO, React, and TypeScript. Players join rooms, take turns drawing prompts, and compete to guess the drawings in a fun and interactive environment. With real-time canvas synchronization, timeouts for word selection, and smooth drawing experiences, this project captures the excitement of collaborative gameplay.
 
 ## Tech Stack
 
@@ -55,8 +55,8 @@ The frontend is developed using React with TypeScript and Vite for a fast develo
 
   ### Clone the repository
    ```bash
-   git clone https://github.com/DivyanshuLohani/skribble-clone.git
-   cd skribbl-clone
+   git clone https://github.com/DivyanshuLohani/SyncDrawGuess.git
+   cd SyncDrawGuess
    ```
 
    ### Start a redis server
