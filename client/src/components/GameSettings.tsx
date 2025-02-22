@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { GameEvent, SettingValue } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
+import RoomLink from "./RoomLink";
 
 const GameSettings: React.FC = () => {
   const { settings, creator, currentRound } = useRoom();
@@ -165,7 +166,7 @@ const GameSettings: React.FC = () => {
             </select>
           </div>
         </div>
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex gap-5 justify-end">
           <button
             onClick={handleStart}
             className="py-2 px-4 w-full bg-blue-500 disabled:bg-blue-400 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 disabled:hover:bg-blue-400 disabled:hover:cursor-not-allowed transition-colors duration-100"
@@ -173,6 +174,7 @@ const GameSettings: React.FC = () => {
           >
             Start
           </button>
+          <RoomLink />
         </div>
       </div>
     </div>

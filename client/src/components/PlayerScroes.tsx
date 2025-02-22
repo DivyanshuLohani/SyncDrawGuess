@@ -13,6 +13,9 @@ const PlayerScores: React.FC = () => {
 
   function addPlayer(player: Player) {
     setDisplayers((p) => {
+      if (player.playerId === socket.id) {
+        return p;
+      }
       return [...p, player];
     });
     playerJoinAudio.play();

@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tippyjs/react": "^4.2.6",
     "fabric": "^6.1.0",
+    "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-canvas-draw": "^1.2.1",
     "react-dom": "^18.3.1",
