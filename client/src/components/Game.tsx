@@ -2,23 +2,28 @@ import PlayerScores from "./PlayerScroes";
 import GameCanvas from "./GameCanvas";
 import Chat from "./Chat";
 import { Room } from "../types";
-import RoomLink from "./RoomLink";
-import GameSettings from "./GameSettings";
-import WordSelector from "./WordSelector";
-import IsChoosingWord from "./Info";
+import GameHeader from "./Header";
+import useIsMobile from "../hooks/useIsMobile";
+import OverlayContent from "./OverlayContent";
 
 const Game = ({ room }: { room: Room }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex h-screen bg-gray-200 flex-col md:flex-row w-full">
-      <PlayerScores players={room.players} />
-      <div className="flex-1 flex flex-col relative">
-        <GameCanvas room={room} />
-        <GameSettings />
-        <IsChoosingWord />
-        <WordSelector />
-        <RoomLink roomId={room.roomId} />
+    <div className="flex flex-col sm:flex-row">
+      {!isMobile && <PlayerScores />}
+      <div>
+        <GameHeader />
+        <div className="relative">
+          <GameCanvas room={room} />
+          <OverlayContent />
+        </div>
       </div>
-      <Chat />
+
+      <div className="flex">
+        {isMobile && <PlayerScores />}
+        <Chat />
+      </div>
     </div>
   );
 };

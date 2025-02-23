@@ -5,13 +5,13 @@ import { useRoom } from "../context/RoomContext";
 import RoomLink from "./RoomLink";
 
 const GameSettings: React.FC = () => {
-  const { settings, creator, currentRound } = useRoom();
+  const { settings, creator, currentRound, changeSetting } = useRoom();
   const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
   // State for settings
   const [numPlayers, setNumPlayers] = useState<number>(settings.players);
   const [drawingTime, setDrawingTime] = useState<number>(settings.drawTime);
   const [rounds, setRounds] = useState<number>(settings.rounds);
-  const { changeSetting } = useRoom();
+  const [words, setWords] = useState<number>(settings.words);
 
   useEffect(() => {
     function handleSettingChange(setting: SettingValue, value: number) {
@@ -83,6 +83,17 @@ const GameSettings: React.FC = () => {
       parseInt(event.target.value)
     );
   };
+
+  const handleWordsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (socket.id != creator) return;
+
+    setWords(parseInt(event.target.value, 10));
+    socket.emit(
+      GameEvent.CHANGE_SETTIING,
+      SettingValue.words,
+      parseInt(event.target.value)
+    );
+  };
   const isOwner = creator === socket.id;
 
   const handleStart = () => {
@@ -98,84 +109,102 @@ const GameSettings: React.FC = () => {
 
   if (!isOpen) return null;
   return (
-    <div className="absolute top-0 left-0 bg-black w-full h-full bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-4">Game Settings</h2>
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <label
-              htmlFor="numPlayers"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Number of Players
-            </label>
-            <select
-              id="numPlayers"
-              value={numPlayers}
-              onChange={handleNumPlayersChange}
-              disabled={!isOwner}
-              className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-            >
-              {[...Array(7)].map((_, i) => (
-                <option key={i + 2} value={i + 2}>
-                  {i + 2}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-between">
-            <label
-              htmlFor="drawingTime"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Drawing Time (seconds)
-            </label>
-            <select
-              id="drawingTime"
-              value={drawingTime}
-              onChange={handleDrawingTimeChange}
-              disabled={!isOwner}
-              className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-            >
-              {[...Array(23)].map((_, i) => (
-                <option key={i * 10 + 20} value={i * 10 + 20}>
-                  {i * 10 + 20}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-between">
-            <label
-              htmlFor="rounds"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Number of Rounds
-            </label>
-            <select
-              id="rounds"
-              value={rounds}
-              onChange={handleRoundsChange}
-              disabled={!isOwner}
-              className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-            >
-              {[...Array(8)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-6 flex gap-5 justify-end">
-          <button
-            onClick={handleStart}
-            className="py-2 px-4 w-full bg-blue-500 disabled:bg-blue-400 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 disabled:hover:bg-blue-400 disabled:hover:cursor-not-allowed transition-colors duration-100"
-            disabled={!isOwner}
+    <div className="w-full h-full p-2 sm:p-6">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="numPlayers"
+            className="block text-sm font-medium text-gray-200 mb-1"
           >
-            Start
-          </button>
-          <RoomLink />
+            Number of Players
+          </label>
+          <select
+            id="numPlayers"
+            value={numPlayers}
+            onChange={handleNumPlayersChange}
+            disabled={!isOwner}
+            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+          >
+            {[...Array(7)].map((_, i) => (
+              <option key={i + 2} value={i + 2}>
+                {i + 2}
+              </option>
+            ))}
+          </select>
         </div>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="drawingTime"
+            className="block text-sm font-medium text-gray-200 mb-1"
+          >
+            Drawing Time (seconds)
+          </label>
+          <select
+            id="drawingTime"
+            value={drawingTime}
+            onChange={handleDrawingTimeChange}
+            disabled={!isOwner}
+            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+          >
+            {[...Array(23)].map((_, i) => (
+              <option key={i * 10 + 20} value={i * 10 + 20}>
+                {i * 10 + 20}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="rounds"
+            className="block text-sm font-medium text-gray-200 mb-1"
+          >
+            Number of Rounds
+          </label>
+          <select
+            id="rounds"
+            value={rounds}
+            onChange={handleRoundsChange}
+            disabled={!isOwner}
+            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+          >
+            {[...Array(8)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="rounds"
+            className="block text-sm font-medium text-gray-200 mb-1"
+          >
+            Number of Words
+          </label>
+          <select
+            id="words"
+            value={words}
+            onChange={handleWordsChange}
+            disabled={!isOwner}
+            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+          >
+            {[...Array(8)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-6 flex gap-5 justify-end">
+        <button
+          onClick={handleStart}
+          className="py-2 px-4 bg-blue-500 disabled:bg-blue-400 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 disabled:hover:bg-blue-400 disabled:hover:cursor-not-allowed transition-colors duration-100 w-3/5"
+          disabled={!isOwner}
+        >
+          Start
+        </button>
+        <RoomLink />
       </div>
     </div>
   );

@@ -52,7 +52,10 @@ const GameHeader = () => {
   });
 
   return (
-    <div className="w-full bg-blue-500 text-white py-2 px-4 flex items-center justify-between z-50">
+    <div
+      style={{ gridArea: "bar" }}
+      className="w-full bg-blue-500 text-white py-2 px-4 flex items-center justify-between z-50"
+    >
       <span className="text-lg font-semibold">{timer}</span>
       <span className="text-xl font-bold items-self-center">{word}</span>
     </div>

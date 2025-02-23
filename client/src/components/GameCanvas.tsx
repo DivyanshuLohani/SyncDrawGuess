@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import GameHeader from "./Header";
 import { socket } from "../socketHandler";
 import { DrawData, GameEvent, Room } from "../types";
-import Toolbar from "./Toolbar";
-import CanvasDraw from "react-canvas-draw";
 import { useRoom } from "../context/RoomContext";
+import Toolbar from "./Toolbar";
 
 const GameCanvas = ({ room }: { room: Room }) => {
-  const canvasRef = useRef<CanvasDraw>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [lineWidth, setLineWidth] = useState<number>(5);
   const [color, setColor] = useState<string>("#000000");
   const [drawData, setDrawData] = useState<DrawData[]>(
@@ -43,37 +41,30 @@ const GameCanvas = ({ room }: { room: Room }) => {
 
   useEffect(() => {
     const fData = { width: 800, height: 600, lines: [...drawData] };
-    canvasRef.current?.loadSaveData(JSON.stringify(fData), true);
+    // canvasRef.current?.loadSaveData(JSON.stringify(fData), true);
   }, [drawData]);
 
   return (
-    <div className="flex-1 bg-gray-100 p-4 flex flex-col">
-      <GameHeader />
-      <div className="flex-1 flex items-center justify-center mt-4">
-        <div className="w-full bg-white border border-gray-300 rounded-lg shadow-md">
-          <CanvasDraw
-            ref={canvasRef}
-            onChange={(e) => {
-              const data = JSON.parse(e.getSaveData()).lines;
-              if (ismyTurn) socket.emit(GameEvent.DRAW, data[data.length - 1]);
-            }}
-            disabled={!ismyTurn}
-            brushColor={color}
-            brushRadius={lineWidth}
-            canvasWidth={800}
-            canvasHeight={600}
-            className="border border-gray-300"
-            hideInterface={!ismyTurn}
-          />
-          <Toolbar
-            onLineWidthChange={setLineWidth}
-            onColorChange={setColor}
-            handleUndo={undo}
-            // handleClear={clear}
-          />
-        </div>
+    <>
+      <div id="game-canvas">
+        <canvas
+          ref={canvasRef}
+          onChange={(e) => {
+            console.log(e);
+          }}
+          width={800}
+          height={600}
+        />
       </div>
-    </div>
+      {ismyTurn && (
+        <Toolbar
+          onLineWidthChange={setLineWidth}
+          onColorChange={setColor}
+          handleUndo={undo}
+          // handleClear={clear}
+        />
+      )}
+    </>
   );
 };
 

@@ -20,7 +20,7 @@ const RoomLink: React.FC = () => {
             window.location.host + `?roomId=${roomId}`
           );
         }}
-        className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 w-full flex items-center justify-center gap-2"
+        className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 w-2/5 flex items-center justify-center gap-2"
       >
         <LinkIcon className="w-4 h-4 inline-block mr-2" />
         <span>Invite</span>

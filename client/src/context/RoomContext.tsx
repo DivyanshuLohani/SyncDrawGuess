@@ -10,6 +10,7 @@ import {
   GameEvent,
   Player,
   Room,
+  RoomState,
   Settings,
   SettingValue,
 } from "../types";
@@ -29,6 +30,7 @@ interface RoomContextValue {
   setRoom: (room: Room) => void; // Optional: function to update the room context
   myTurn: boolean;
   me: Player | null;
+  roomState: RoomState;
 }
 const RoomContext = createContext<RoomContextValue | undefined>(undefined);
 
@@ -63,10 +65,12 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       rounds: 0,
       onlyCustomWords: false,
       customWords: [],
+      words: 0,
     },
   });
   const [myTurn, setIsmyTrun] = useState(true);
   const [me, setMe] = useState<Player | null>(null);
+  const [roomState, setRoomState] = useState<RoomState>(RoomState.NOT_STARTED);
 
   function addPlayer(player: Player) {
     setRoom((p) => {
@@ -83,9 +87,18 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   }
 
   function setTurn(room: Room) {
+    setRoomState(RoomState.GUESSED);
     const cP = room.players[room.gameState.currentPlayer] || null;
     if (cP && socket.id === cP.playerId) setIsmyTrun(true);
     else setIsmyTrun(false);
+    setTimeout(() => {
+      if (
+        roomState !== RoomState.WINNER &&
+        roomState !== RoomState.PLAYER_CHOOSE_WORD
+      )
+        setRoomState(RoomState.CHOOSING_WORD);
+    }, 5000);
+
     joinedRoom(room);
   }
 
@@ -111,22 +124,48 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setMe(room.players.find((p) => p.playerId === socket.id) ?? null);
   }
 
+  function wordChosen() {
+    setRoomState(RoomState.DRAWING);
+  }
+
+  function choseWord() {
+    setRoomState(RoomState.PLAYER_CHOOSE_WORD);
+  }
+
+  function gameStarted(room: Room) {
+    setRoomState(RoomState.CHOOSING_WORD);
+    joinedRoom(room);
+  }
+
+  function gameEnded(romm: Room) {
+    setRoomState(RoomState.WINNER);
+    setTimeout(() => {
+      setRoomState(RoomState.NOT_STARTED);
+    }, 10000);
+    joinedRoom(romm);
+  }
+
   useEffect(() => {
     socket.on(GameEvent.JOINED_ROOM, joinedRoom);
+    socket.on(GameEvent.WORD_CHOSEN, wordChosen);
     socket.on(GameEvent.TURN_END, setTurn);
-    socket.on(GameEvent.GAME_STARTED, joinedRoom);
-    socket.on(GameEvent.GAME_ENDED, joinedRoom);
+    socket.on(GameEvent.GAME_STARTED, gameStarted);
+    socket.on(GameEvent.GAME_ENDED, gameEnded);
     socket.on(GameEvent.PLAYER_JOINED, addPlayer);
     socket.on(GameEvent.PLAYER_LEFT, removePlayer);
+    socket.on(GameEvent.CHOOSE_WORD, choseWord);
 
     return () => {
       socket.off(GameEvent.JOINED_ROOM, joinedRoom);
-      socket.off(GameEvent.GAME_STARTED, joinedRoom);
-      socket.off(GameEvent.GAME_ENDED, joinedRoom);
+      socket.off(GameEvent.GAME_STARTED, gameStarted);
+      socket.off(GameEvent.GAME_ENDED, gameEnded);
       socket.off(GameEvent.TURN_END, setTurn);
       socket.off(GameEvent.PLAYER_JOINED, addPlayer);
       socket.off(GameEvent.PLAYER_LEFT, removePlayer);
+      socket.off(GameEvent.WORD_CHOSEN, wordChosen);
+      socket.off(GameEvent.CHOOSE_WORD, choseWord);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentPlayer = room.players[room.gameState.currentPlayer] || null;
@@ -145,6 +184,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     changeSetting,
     myTurn,
     me,
+    roomState: roomState,
   };
 
   return (

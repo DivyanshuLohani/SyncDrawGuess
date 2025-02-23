@@ -59,12 +59,14 @@ export interface Settings {
   rounds: number;
   onlyCustomWords: boolean;
   customWords: string[];
+  words: number;
 }
 
 export enum SettingValue {
   players = "players",
   drawTime = "drawTime",
   rounds = "rounds",
+  words = "words",
   // onlyCustomWords: boolean;
   // customWords: string[];
 }
@@ -75,4 +77,14 @@ export interface Room {
   players: Player[]; // List of players in the room
   gameState: GameState; // Current state of the game
   settings: Settings;
+}
+
+export enum RoomState {
+  NOT_STARTED = "NOT_STARTED",
+  PLAYER_CHOOSE_WORD = "PLAYER_CHOOSE_WORD",
+  CHOOSING_WORD = "CHOOSING_WORD",
+  DRAWING = "DRAWING",
+  GUESSED = "GUESSED",
+  TIMEUP = "TIMEUP",
+  WINNER = "WINNER",
 }

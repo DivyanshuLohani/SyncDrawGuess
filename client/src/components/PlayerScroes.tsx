@@ -45,7 +45,7 @@ const PlayerScores: React.FC = () => {
   });
 
   return (
-    <div className="w-full md:w-1/4 bg-white py-4 shadow-md border-r border-gray-300">
+    <div className="bg-white py-4 shadow-md border-r border-gray-300">
       <h2 className="text-xl font-semibold mb-4 px-4">Players</h2>
       {currentRound > 0 && (
         <h2 className="text-lg mb-4 px-4">
