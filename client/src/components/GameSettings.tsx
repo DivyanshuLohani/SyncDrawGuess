@@ -3,6 +3,7 @@ import { GameEvent, SettingValue } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
 import RoomLink from "./RoomLink";
+import Button from "./ui/Button";
 
 const GameSettings: React.FC = () => {
   const { settings, creator, currentRound, changeSetting } = useRoom();
@@ -197,13 +198,14 @@ const GameSettings: React.FC = () => {
         </div>
       </div>
       <div className="mt-6 flex gap-5 justify-end">
-        <button
+        <Button
           onClick={handleStart}
-          className="py-2 px-4 bg-blue-500 disabled:bg-blue-400 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 disabled:hover:bg-blue-400 disabled:hover:cursor-not-allowed transition-colors duration-100 w-3/5"
+          className="w-3/5"
           disabled={!isOwner}
+          variant="success"
         >
           Start
-        </button>
+        </Button>
         <RoomLink />
       </div>
     </div>

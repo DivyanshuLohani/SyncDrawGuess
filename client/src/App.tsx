@@ -4,6 +4,7 @@ import { socket } from "./socketHandler";
 import JoinGameForm from "./components/JoinGameForm";
 import Game from "./components/Game";
 import { RoomProvider } from "./context/RoomContext";
+import Logo from "./components/Logo";
 
 const Home: React.FC = () => {
   const [room, setRoom] = useState<Room | null>(null);
@@ -37,6 +38,8 @@ const Home: React.FC = () => {
 
   return (
     <RoomProvider>
+      <Logo />
+
       {room ? <Game room={room} /> : <JoinGameForm />}
     </RoomProvider>
   );

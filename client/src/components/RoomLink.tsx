@@ -3,6 +3,7 @@ import { useRoom } from "../context/RoomContext";
 import { LinkIcon } from "lucide-react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import Button from "./ui/Button";
 
 const RoomLink: React.FC = () => {
   const { roomId } = useRoom();
@@ -14,17 +15,17 @@ const RoomLink: React.FC = () => {
       trigger="click"
       animation="tada"
     >
-      <button
+      <Button
         onClick={() => {
           navigator.clipboard.writeText(
             window.location.host + `?roomId=${roomId}`
           );
         }}
-        className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 w-2/5 flex items-center justify-center gap-2"
+        className="w-2/5"
+        startIcon={<LinkIcon className="w-4 h-4 inline-block mr-2" />}
       >
-        <LinkIcon className="w-4 h-4 inline-block mr-2" />
         <span>Invite</span>
-      </button>
+      </Button>
     </Tippy>
   );
 };

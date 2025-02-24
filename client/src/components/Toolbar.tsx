@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GameEvent } from "../types";
 import { socket } from "../socketHandler";
+import Button from "./ui/Button";
 
 const colors = [
   "#000000", // Black
@@ -59,24 +60,24 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <div className="w-4 h-4 rounded-full ${width === selectedLineWidth ? 'bg-blue-500' : 'bg-transparent'}" />
           </div>
         ))}
-        <button
-          className="border border-black px-2 rounded"
+        <Button
+          variant="outline"
           onClick={() => {
             socket.emit(GameEvent.DRAW_UNDO);
             handleUndo();
           }}
         >
           Undo
-        </button>
-        <button
-          className="border border-black px-2 rounded"
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => {
             socket.emit(GameEvent.DRAW_CLEAR);
             handleClear();
           }}
         >
           Clear
-        </button>
+        </Button>
       </div>
       <div className="flex flex-wrap gap-2">
         {colors.map((color, i) => (

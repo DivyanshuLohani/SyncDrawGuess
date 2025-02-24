@@ -1,5 +1,6 @@
 import { socket } from "../../socketHandler";
 import { GameEvent } from "../../types";
+import Button from "../ui/Button";
 
 export default function WordSelector({ words }: { words: string[] }) {
   function handleWordSelect(word: string) {
@@ -10,13 +11,9 @@ export default function WordSelector({ words }: { words: string[] }) {
     <div className="flex flex-wrap gap-2 items-center justify-center">
       {words.map((e) => {
         return (
-          <button
-            onClick={() => handleWordSelect(e)}
-            className="px-2 py-1 border-2 border-white rounded text-white font-bold text-2xl hover:bg-white hover:text-black duration-100"
-            key={e}
-          >
+          <Button onClick={() => handleWordSelect(e)} variant="outline" key={e}>
             {e}
-          </button>
+          </Button>
         );
       })}
     </div>

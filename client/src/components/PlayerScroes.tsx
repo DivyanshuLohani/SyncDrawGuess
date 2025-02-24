@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { GameEvent, Player, Room } from "../types";
 import { socket } from "../socketHandler";
-import joinAudio from "../sounds/playerJoin.wav";
-import leaveAudio from "../sounds/playerLeft.wav";
 import { useRoom } from "../context/RoomContext";
+import { CrownIcon, Users } from "lucide-react";
+import clsx from "clsx";
 
 const PlayerScores: React.FC = () => {
-  const playerJoinAudio = new Audio(joinAudio);
-  const playerLeftAudio = new Audio(leaveAudio);
   const { currentPlayer, currentRound, settings, creator, players } = useRoom();
   const [displayers, setDisplayers] = useState<Player[]>(players);
 
@@ -18,14 +16,11 @@ const PlayerScores: React.FC = () => {
       }
       return [...p, player];
     });
-    playerJoinAudio.play();
   }
   function removePlayer(player: Player) {
     setDisplayers((p) => {
       return p.filter((e) => e.playerId != player.playerId);
     });
-
-    playerLeftAudio.play();
   }
 
   function roundEnd(room: Room) {
@@ -45,42 +40,46 @@ const PlayerScores: React.FC = () => {
   });
 
   return (
-    <div className="bg-white py-4 shadow-md border-r border-gray-300">
-      <h2 className="text-xl font-semibold mb-4 px-4">Players</h2>
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-1 rounded-xl shadow-lg border-2 border-primary-400 h-full">
+      <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
+        <Users className="mt-2" />
+        <span>Players</span>
+      </h2>
+
       {currentRound > 0 && (
-        <h2 className="text-lg mb-4 px-4">
+        <p className="text-center text-primary-400 font-semibold mt-2 bg-background-paper rounded-lg py-1">
           Round {currentRound} of {settings.rounds}
-        </h2>
+        </p>
       )}
-      <div className="">
-        {displayers.map((player, index) => (
-          <div
-            key={index}
-            className={`flex items-center justify-between bg-blend-darken py-2 px-4 ${
-              currentPlayer && currentPlayer.playerId === player.playerId
-                ? "bg-slate-200"
-                : ""
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-500">
-                #
-                {players
-                  .sort((a, b) => b.score - a.score)
-                  .findIndex((p) => p.playerId === player.playerId) + 1}
-              </span>
-              <span
-                className="block w-4 h-4 rounded-full"
-                style={{ backgroundColor: player.color }}
-              ></span>
-              <span className="font-medium">{player.name}</span>
+      <ul className="mt-4 space-y-2">
+        {displayers
+          .sort((a, b) => b.score - a.score)
+          .map((player, index) => (
+            <div
+              className={clsx(
+                "flex items-center bg-white border border-gray-300 rounded-lg px-3 py-2 shadow gap-5",
+                {
+                  "bg-primary-100": player.playerId === currentPlayer?.playerId,
+                }
+              )}
+              key={player.playerId}
+            >
+              <div className="font-bold">
+                <span>#{index + 1} </span>
+                {player.playerId === creator && (
+                  <CrownIcon className="text-gray-500 mr-2" size={20} />
+                )}
+              </div>
+              <div className="flex-1">
+                <span className="text-primary truncate font-bold text-sm sm:text-base">
+                  {player.name}
+                </span>
+                <p className="text-xs text-gray-500">{player.score} points</p>
+              </div>
+              <img src={""} alt="avatar" className="w-8 h-8 rounded-md" />
             </div>
-            <span className="font-medium">
-              {player.playerId === creator && <span> ♚ </span>} {player.score}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+      </ul>
     </div>
   );
 };

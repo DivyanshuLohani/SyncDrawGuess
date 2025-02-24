@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tippyjs/react": "^4.2.6",
+    "clsx": "^2.1.1",
     "fabric": "^6.1.0",
     "framer-motion": "^12.4.7",
     "lucide-react": "^0.475.0",
@@ -20,7 +21,8 @@
     "react-fabric": "^0.4.1",
     "react-router-dom": "^6.26.0",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

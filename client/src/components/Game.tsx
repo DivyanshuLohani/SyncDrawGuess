@@ -5,13 +5,15 @@ import { Room } from "../types";
 import GameHeader from "./Header";
 import useIsMobile from "../hooks/useIsMobile";
 import OverlayContent from "./OverlayContent";
+import AudioManager from "./Audio/AudioManager";
 
 const Game = ({ room }: { room: Room }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-col sm:flex-row">
-      {!isMobile && <PlayerScores />}
+    <div className="flex flex-grow flex-col sm:flex-row justify-center w-full h-full">
+      <AudioManager />
+      <div className="flex-col">{!isMobile && <PlayerScores />}</div>
       <div>
         <GameHeader />
         <div className="relative overflow-hidden">

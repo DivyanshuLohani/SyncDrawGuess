@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent, Player } from "../types";
-import playerGuessAudio from "../sounds/playerGuess.wav";
 import { useRoom } from "../context/RoomContext";
+import { MessageSquareMoreIcon, SendIcon } from "lucide-react";
+import Button from "./ui/Button";
+import useIsMobile from "../hooks/useIsMobile";
 
 enum MessageType {
   Guess = "guess",
@@ -24,11 +26,18 @@ const Chat = () => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<IMessage[]>([]);
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
-  const playerGuess = new Audio(playerGuessAudio);
-  const { currentPlayer, me } = useRoom();
+  const { currentPlayer, me, myTurn } = useRoom();
+  const isMobile = useIsMobile();
 
   function addMessageToChat(message: string, player: Player) {
     if (player.guessed && player.playerId != socket.id) return;
+    if (currentPlayer?.playerId === player.playerId && !myTurn) return;
+    if (myTurn) {
+      setMessages([
+        ...messages,
+        { sender: player.name, message, type: MessageType.GuessClose },
+      ]);
+    }
     setMessages([
       ...messages,
       { sender: player.name, message, type: MessageType.Guess },
@@ -55,7 +64,6 @@ const Chat = () => {
   }
 
   function addGuessedMessage(player: Player) {
-    playerGuess.play();
     setMessages([
       ...messages,
       {
@@ -141,12 +149,16 @@ const Chat = () => {
   }, [messages]);
 
   return (
-    <div
-      className="bg-white p-4 shadow-md border-l border-gray-300"
-      style={{ gridArea: "chat" }}
-    >
-      <h2 className="text-xl font-semibold mb-4">Chat</h2>
-      <div className="h-80 overflow-y-auto mb-4" ref={messagesBottomDiv}>
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-1 rounded-xl shadow-lg border-2 border-primary-400 h-full relative">
+      <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
+        <MessageSquareMoreIcon className="mt-2" />
+        <span>Chat</span>
+      </h2>
+
+      <div
+        className="h-full max-h-screen overflow-y-auto mb-4 sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 "
+        ref={messagesBottomDiv}
+      >
         {messages.map((msg, index) => (
           <Message key={index} message={msg} />
         ))}
@@ -157,17 +169,22 @@ const Chat = () => {
           e.preventDefault();
           handleSend();
         }}
-        className="flex"
+        className="flex relative gap-2 flex-col sm:flex-row bottom-0"
       >
         <input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="w-full p-2 border border-gray-300 rounded-md"
+          placeholder="Type something fun..."
+          className="w-full p-3 pl-4 pr-12 border-2 border-primary-400 rounded-lg sm:rounded-full font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
         />
-        <button className="ml-2 bg-blue-500 text-white py-2 px-4 rounded-md">
-          Send
-        </button>
+        <Button
+          endIcon={<SendIcon />}
+          onClick={handleSend}
+          className="rounded-lg sm:rounded-full"
+          type="button"
+        >
+          {isMobile && "Send"}
+        </Button>
       </form>
     </div>
   );
@@ -179,61 +196,54 @@ const Message = ({ message }: { message: IMessage }) => {
       <b>{message.sender}</b> <span>{message.message}</span>
     </>
   );
-  let bgColor = "bg-white";
+  let bgClass = "bg-background-paper";
 
   switch (message.type) {
     case MessageType.PlayerJoin:
-      bgColor = " bg-gray-100";
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-green-500">{message.sender} joined the game</span>
-      );
-      break;
-    case MessageType.PlayerLeft:
-      bgColor = " bg-gray-100";
-
-      content = (
-        <span className="text-red-500 bg-gray-100">
-          {message.sender} left the game
+        <span className="text-success-main">
+          {message.sender} joined the game
         </span>
       );
       break;
-    case MessageType.Error:
-      bgColor = " bg-gray-100";
-
+    case MessageType.PlayerLeft:
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-red-500 bg-gray-100">{message.message}</span>
+        <span className="text-error-main">{message.sender} left the game</span>
       );
       break;
-
+    case MessageType.Error:
+      bgClass = "bg-neutral-100";
+      content = <span className="text-error-main">{message.message}</span>;
+      break;
     case MessageType.WordGuessed:
-      bgColor = " bg-gray-100";
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-green-500">
+        <span className="text-success-main">
           <b>{message.sender}</b> has guessed the word
         </span>
       );
       break;
     case MessageType.WordChoosen:
-      bgColor = " bg-gray-100";
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-green-500">
+        <span className="text-success-main">
           <b>{message.sender}</b> {message.message}
         </span>
       );
       break;
     case MessageType.GuessClose:
-      bgColor = " bg-gray-100";
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-yellow-900 bg-gray-100">
-          '{message.message}' is close
-        </span>
+        <span className="text-warning-dark">'{message.message}' is close</span>
       );
       break;
     case MessageType.WordWas:
-      bgColor = " bg-gray-100";
+      bgClass = "bg-neutral-100";
       content = (
-        <span className="text-green-500 bg-gray-100">
-          Thw word was '<b>{message.message}</b>'
+        <span className="text-success-main">
+          The word was '<b>{message.message}</b>'
         </span>
       );
       break;
@@ -241,7 +251,12 @@ const Message = ({ message }: { message: IMessage }) => {
       break;
   }
 
-  return <div className={`mb-1 rounded-md ${bgColor}`}>{content}</div>;
+  return (
+    <div
+      className={`mb-1 px-2 py-1 rounded-md ${bgClass} transition-colors duration-200 text-sm sm:text-base`}
+    >
+      {content}
+    </div>
+  );
 };
-
 export default Chat;

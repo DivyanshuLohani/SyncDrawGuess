@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent } from "../types";
+import Button from "./ui/Button";
 
 export default function JoinGameForm() {
   const [name, setName] = useState<string>("");
@@ -67,12 +68,9 @@ export default function JoinGameForm() {
             className="w-full border border-gray-300 rounded-md"
           />
         </div>
-        <button
-          onClick={handleJoin}
-          className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600"
-        >
+        <Button onClick={handleJoin} fullWidth variant="success">
           Join Game
-        </button>
+        </Button>
       </div>
     </div>
   );
