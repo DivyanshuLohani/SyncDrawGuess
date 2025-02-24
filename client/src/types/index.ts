@@ -6,6 +6,8 @@ export enum GameEvent {
   LEAVE_ROOM = "leaveRoom",
   START_GAME = "startGame",
   DRAW = "draw",
+  DRAW_CLEAR = "clear",
+  DRAW_UNDO = "undo",
   GUESS = "guess",
   CHANGE_SETTIING = "changeSettings",
   WORD_SELECT = "wordSelect",
@@ -17,6 +19,8 @@ export enum GameEvent {
   GAME_STARTED = "gameStarted",
   GAME_ENDED = "gameEnded",
   DRAW_DATA = "drawData",
+  CLEAR_DRAW = "clearDraw",
+  UNDO_DRAW = "undoDraw",
   GUESSED = "guessed",
   TURN_END = "turnEnded",
   CHOOSE_WORD = "chooseWord",
@@ -38,12 +42,11 @@ export interface Player extends PlayerData {
 }
 
 export interface DrawData {
-  brushColor: string;
-  brushRadius: number;
-  points: {
-    x: number;
-    y: number;
-  }[];
+  x: number;
+  y: number;
+  color: string;
+  lineWidth: number;
+  end: boolean;
 }
 export interface GameState {
   currentRound: number;

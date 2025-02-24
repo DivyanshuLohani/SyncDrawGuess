@@ -11,6 +11,7 @@ enum MessageType {
   WordGuessed = "wordGuessed",
   GuessClose = "guessClose",
   WordChoosen = "wordChosen",
+  WordWas = "wordWas",
   Error = "error",
 }
 interface IMessage {
@@ -76,6 +77,18 @@ const Chat = () => {
     ]);
   }
 
+  function addWordWas(_: unknown, word: string) {
+    if (!currentPlayer) return;
+    setMessages([
+      ...messages,
+      {
+        sender: "",
+        message: word,
+        type: MessageType.WordWas,
+      },
+    ]);
+  }
+
   function clearChat() {
     setMessages([]);
   }
@@ -95,6 +108,7 @@ const Chat = () => {
     socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
     socket.on(GameEvent.GUESSED, addGuessedMessage);
     socket.on(GameEvent.WORD_CHOSEN, addWordChosen);
+    socket.on(GameEvent.TURN_END, addWordWas);
     socket.on("error", addErrorMessage);
 
     return () => {
@@ -104,6 +118,7 @@ const Chat = () => {
       socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
       socket.off(GameEvent.GUESSED, addGuessedMessage);
       socket.off(GameEvent.WORD_CHOSEN, addWordChosen);
+      socket.off(GameEvent.TURN_END, addWordWas);
       socket.off("error", addErrorMessage);
     };
   });
@@ -211,6 +226,14 @@ const Message = ({ message }: { message: IMessage }) => {
       content = (
         <span className="text-yellow-900 bg-gray-100">
           '{message.message}' is close
+        </span>
+      );
+      break;
+    case MessageType.WordWas:
+      bgColor = " bg-gray-100";
+      content = (
+        <span className="text-green-500 bg-gray-100">
+          Thw word was '<b>{message.message}</b>'
         </span>
       );
       break;

@@ -18,6 +18,8 @@ export enum GameEvent {
   LEAVE_ROOM = "leaveRoom",
   START_GAME = "startGame",
   DRAW = "draw",
+  DRAW_CLEAR = "clear",
+  DRAW_UNDO = "undo",
   GUESS = "guess",
   CHANGE_SETTIING = "changeSettings",
   WORD_SELECT = "wordSelect",
@@ -29,6 +31,8 @@ export enum GameEvent {
   GAME_STARTED = "gameStarted",
   GAME_ENDED = "gameEnded",
   DRAW_DATA = "drawData",
+  CLEAR_DRAW = "clearDraw",
+  UNDO_DRAW = "undoDraw",
   GUESSED = "guessed",
   TURN_END = "turnEnded",
   CHOOSE_WORD = "chooseWord",
@@ -109,6 +113,30 @@ export function setupSocket(io: Server) {
       room.gameState.drawingData.push(drawData);
       await setRoom(room.roomId, room);
       socket.to(room.roomId).emit(GameEvent.DRAW_DATA, drawData);
+    });
+
+    socket.on(GameEvent.DRAW_CLEAR, async () => {
+      const room = await getRoom(socket);
+      if (!room) return;
+      if (room.gameState.currentRound === 0) return;
+      const currentPlayer = room.players[room.gameState.currentPlayer];
+      if (!currentPlayer) return;
+      if (currentPlayer.playerId != socket.id) return;
+      room.gameState.drawingData = [];
+      await setRoom(room.roomId, room);
+      socket.to(room.roomId).emit(GameEvent.CLEAR_DRAW);
+    });
+
+    socket.on(GameEvent.DRAW_UNDO, async () => {
+      const room = await getRoom(socket);
+      if (!room) return;
+      if (room.gameState.currentRound === 0) return;
+      const currentPlayer = room.players[room.gameState.currentPlayer];
+      if (!currentPlayer) return;
+      if (currentPlayer.playerId != socket.id) return;
+      room.gameState.drawingData.pop();
+      await setRoom(room.roomId, room);
+      socket.to(room.roomId).emit(GameEvent.UNDO_DRAW);
     });
 
     socket.on(GameEvent.GUESS, async (data: any) => {

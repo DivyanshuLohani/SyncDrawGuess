@@ -14,7 +14,7 @@ const Game = ({ room }: { room: Room }) => {
       {!isMobile && <PlayerScores />}
       <div>
         <GameHeader />
-        <div className="relative">
+        <div className="relative overflow-hidden">
           <GameCanvas room={room} />
           <OverlayContent />
         </div>

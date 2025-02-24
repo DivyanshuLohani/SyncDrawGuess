@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { GameEvent } from "../types";
+import { socket } from "../socketHandler";
 
 const colors = [
   "#000000", // Black
@@ -16,12 +18,14 @@ interface ToolbarProps {
   onLineWidthChange: (width: number) => void;
   onColorChange: (color: string) => void;
   handleUndo: () => void;
+  handleClear: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
   onLineWidthChange,
   onColorChange,
   handleUndo,
+  handleClear,
 }) => {
   const [selectedLineWidth, setSelectedLineWidth] = useState<number>(5);
   const [selectedColor, setSelectedColor] = useState<string>("#000000");
@@ -57,9 +61,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
         ))}
         <button
           className="border border-black px-2 rounded"
-          onClick={handleUndo}
+          onClick={() => {
+            socket.emit(GameEvent.DRAW_UNDO);
+            handleUndo();
+          }}
         >
           Undo
+        </button>
+        <button
+          className="border border-black px-2 rounded"
+          onClick={() => {
+            socket.emit(GameEvent.DRAW_CLEAR);
+            handleClear();
+          }}
+        >
+          Clear
         </button>
       </div>
       <div className="flex flex-wrap gap-2">

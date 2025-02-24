@@ -6,6 +6,7 @@ import { socket } from "../socketHandler";
 import ChoosingWord from "./Overlay/ChoosingWord";
 import WordSelector from "./Overlay/WordSelector";
 import Winners from "./Overlay/Winners";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function OverlayContent() {
   const { roomState } = useRoom();
@@ -32,24 +33,37 @@ export default function OverlayContent() {
       socket.off(GameEvent.TURN_END, handleWord);
     };
   }, []);
-  console.log(roomState);
   return (
-    <div
-      className={`absolute w-full h-full bg-black/75 top-0 flex items-center justify-center transition-transform duration-300 ${
-        roomState === RoomState.DRAWING && "top-[-1000%] pointer-events-none"
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: roomState === RoomState.DRAWING ? 0 : 1 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className={`absolute w-full h-full bg-black/75 top-0 flex items-center justify-center  ${
+        roomState === RoomState.DRAWING && "pointer-events-none"
       }`}
     >
-      {roomState === RoomState.NOT_STARTED && <GameSettings />}
-      {roomState === RoomState.CHOOSING_WORD && <ChoosingWord />}
-      {roomState === RoomState.PLAYER_CHOOSE_WORD && (
-        <WordSelector words={words} />
-      )}
-      {roomState === RoomState.WINNER && <Winners />}
-      {roomState === RoomState.GUESSED && (
-        <span className="font-bold text-white text-2xl">
-          The word was <strong className="text-green-500">{word}</strong>
-        </span>
-      )}
-    </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={roomState}
+          initial={{ y: "-50%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: "50%", opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="w-full h-full flex items-center justify-center"
+        >
+          {roomState === RoomState.NOT_STARTED && <GameSettings />}
+          {roomState === RoomState.CHOOSING_WORD && <ChoosingWord />}
+          {roomState === RoomState.PLAYER_CHOOSE_WORD && (
+            <WordSelector words={words} />
+          )}
+          {roomState === RoomState.WINNER && <Winners />}
+          {roomState === RoomState.GUESSED && (
+            <span className="font-bold text-white text-2xl">
+              The word was <strong className="text-green-500">{word}</strong>
+            </span>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
