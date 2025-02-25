@@ -1,3 +1,5 @@
+import exp from "constants";
+
 export interface PlayerData {
   name: string;
   color: string;
@@ -24,14 +26,20 @@ export interface Settings {
   rounds: number;
   onlyCustomWords: boolean;
   customWords: string[];
+  language: Languages;
+  wordCount: number;
+  hints: number;
 }
 
 export enum SettingValue {
   players = "players",
   drawTime = "drawTime",
   rounds = "rounds",
-  // onlyCustomWords: boolean;
-  // customWords: string[];
+  onlyCustomWords = "onlyCustomWords",
+  customWords = "customWords",
+  language = "language",
+  wordCount = "wordCount",
+  hints = "hints",
 }
 
 export interface Room {
@@ -40,4 +48,18 @@ export interface Room {
   players: Player[]; // List of players in the room
   gameState: GameState; // Current state of the game
   settings: Settings;
+  isPrivate: boolean;
+}
+
+export enum Languages {
+  en = "English",
+  es = "Spanish",
+  fr = "French",
+  de = "German",
+  it = "Italian",
+  nl = "Dutch",
+  pt = "Portuguese",
+  ru = "Russian",
+  tr = "Turkish",
+  zh = "Chinese",
 }

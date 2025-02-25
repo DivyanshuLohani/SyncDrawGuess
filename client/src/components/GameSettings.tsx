@@ -12,7 +12,7 @@ const GameSettings: React.FC = () => {
   const [numPlayers, setNumPlayers] = useState<number>(settings.players);
   const [drawingTime, setDrawingTime] = useState<number>(settings.drawTime);
   const [rounds, setRounds] = useState<number>(settings.rounds);
-  const [words, setWords] = useState<number>(settings.words);
+  const [wordCount, setWordCount] = useState<number>(settings.wordCount);
 
   useEffect(() => {
     function handleSettingChange(setting: SettingValue, value: number) {
@@ -27,7 +27,9 @@ const GameSettings: React.FC = () => {
         case SettingValue.rounds:
           setRounds(value);
           break;
-
+        case SettingValue.wordCount:
+          setWordCount(value);
+          break;
         default:
           break;
       }
@@ -88,10 +90,10 @@ const GameSettings: React.FC = () => {
   const handleWordsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (socket.id != creator) return;
 
-    setWords(parseInt(event.target.value, 10));
+    setWordCount(parseInt(event.target.value, 10));
     socket.emit(
       GameEvent.CHANGE_SETTIING,
-      SettingValue.words,
+      SettingValue.wordCount,
       parseInt(event.target.value)
     );
   };
@@ -102,10 +104,10 @@ const GameSettings: React.FC = () => {
     socket.emit(GameEvent.START_GAME);
   };
 
-  const handleEnd = () => {
+  const handleEnd = ({ time }: { time: number }) => {
     setTimeout(() => {
       setIsOpen(true);
-    }, 10000);
+    }, time * 1000);
   };
 
   if (!isOpen) return null;
@@ -184,7 +186,7 @@ const GameSettings: React.FC = () => {
           </label>
           <select
             id="words"
-            value={words}
+            value={wordCount}
             onChange={handleWordsChange}
             disabled={!isOwner}
             className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"

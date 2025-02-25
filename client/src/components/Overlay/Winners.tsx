@@ -4,7 +4,9 @@ export default function Winners() {
   const { players } = useRoom();
   return (
     <div className="flex flex-col text-white w-1/2">
-      <h3 className="text-2xl text-center font-bold mb-5">Game Ended</h3>
+      <h3 className="text-2xl text-center font-bold mb-5 text-white">
+        Game Ended
+      </h3>
       <div className="flex flex-col">
         {players
           .sort((a, b) => b.score - a.score)

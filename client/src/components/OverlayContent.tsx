@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import GameSettings from "./GameSettings";
 import { useRoom } from "../context/RoomContext";
-import { GameEvent, RoomState } from "../types";
+import { EndTurnData, GameEvent, RoomState } from "../types";
 import { socket } from "../socketHandler";
 import ChoosingWord from "./Overlay/ChoosingWord";
 import WordSelector from "./Overlay/WordSelector";
@@ -13,19 +13,20 @@ export default function OverlayContent() {
   const [word, setWord] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
 
+  function choosableWords({ words }: { words: string[]; time: number }) {
+    setWords(words);
+  }
+
   useEffect(() => {
-    socket.on(GameEvent.CHOOSE_WORD, setWords);
-    // socket.on(GameEvent.WORD_CHOSEN, close);
+    socket.on(GameEvent.CHOOSE_WORD, choosableWords);
     return () => {
-      socket.off(GameEvent.CHOOSE_WORD, setWords);
-      //   socket.off(GameEvent.WORD_CHOSEN, close);
+      socket.off(GameEvent.CHOOSE_WORD, choosableWords);
     };
   }, []);
 
   useEffect(() => {
-    function handleWord(_: unknown, word: string) {
-      console.log(word);
-      setWord(word);
+    function handleWord(_: unknown, data: EndTurnData) {
+      setWord(data.word);
     }
     socket.on(GameEvent.TURN_END, handleWord);
 

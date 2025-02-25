@@ -24,7 +24,9 @@ export enum GameEvent {
   GUESSED = "guessed",
   TURN_END = "turnEnded",
   CHOOSE_WORD = "chooseWord",
+  CHOOSING_WORD = "choosingWord",
   WORD_CHOSEN = "wordChosen",
+  GUESS_WORD_CHOSEN = "guessWordChosen",
   SETTINGS_CHANGED = "settingsChanged",
   GUESS_FAIL = "guessFail",
 }
@@ -62,16 +64,33 @@ export interface Settings {
   rounds: number;
   onlyCustomWords: boolean;
   customWords: string[];
-  words: number;
+  language: Languages;
+  wordCount: number;
+  hints: number;
+}
+
+export enum Languages {
+  en = "English",
+  es = "Spanish",
+  fr = "French",
+  de = "German",
+  it = "Italian",
+  nl = "Dutch",
+  pt = "Portuguese",
+  ru = "Russian",
+  tr = "Turkish",
+  zh = "Chinese",
 }
 
 export enum SettingValue {
   players = "players",
   drawTime = "drawTime",
   rounds = "rounds",
-  words = "words",
-  // onlyCustomWords: boolean;
-  // customWords: string[];
+  onlyCustomWords = "onlyCustomWords",
+  customWords = "customWords",
+  language = "language",
+  wordCount = "wordCount",
+  hints = "hints",
 }
 
 export interface Room {
@@ -91,3 +110,9 @@ export enum RoomState {
   TIMEUP = "TIMEUP",
   WINNER = "WINNER",
 }
+
+export type EndTurnData = {
+  word: string;
+  reason: string;
+  time: number;
+};

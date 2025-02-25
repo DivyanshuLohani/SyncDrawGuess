@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
-import { GameEvent } from "../types";
+import { EndTurnData, GameEvent, Room } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
 
 const GameHeader = () => {
-  const [word, setWord] = useState("");
+  const [word, setWord] = useState<string | number[]>("");
   const [interval, startInterval] = useState<NodeJS.Timeout | null>(null);
   const { settings } = useRoom();
   const [timer, setTimer] = useState<number>(settings.drawTime);
 
-  function initTimer(word?: string) {
+  function initTimer({
+    word,
+    time,
+  }: {
+    word: string | number[];
+    time: number;
+  }) {
     if (interval) clearInterval(interval);
-    setTimer(settings.drawTime);
+    setTimer(time);
     startInterval(
       setInterval(() => {
         if (timer > 0) {
@@ -20,11 +26,11 @@ const GameHeader = () => {
       }, 1000)
     );
 
-    if (word) setWord(word);
+    setWord(word);
   }
-  function initTimerForWord() {
+  function initTimerForWord({ time }: { time: number }) {
     if (interval) clearInterval(interval);
-    setTimer(30);
+    setTimer(time);
 
     startInterval(
       setInterval(() => {
@@ -35,26 +41,41 @@ const GameHeader = () => {
     );
   }
 
-  function endTurn() {
+  function endTurn(_room: Room, data: EndTurnData) {
     setWord("");
-    if (interval) clearInterval(interval);
+    setTimer(data.time);
   }
 
   useEffect(() => {
     socket.on(GameEvent.WORD_CHOSEN, initTimer);
+    socket.on(GameEvent.GUESS_WORD_CHOSEN, initTimer);
     socket.on(GameEvent.CHOOSE_WORD, initTimerForWord);
+    socket.on(GameEvent.CHOOSING_WORD, initTimerForWord);
     socket.on(GameEvent.TURN_END, endTurn);
+    socket.on(GameEvent.GAME_ENDED, endTurn);
     return () => {
       socket.off(GameEvent.WORD_CHOSEN, initTimer);
+      socket.off(GameEvent.GUESS_WORD_CHOSEN, initTimer);
       socket.off(GameEvent.CHOOSE_WORD, initTimerForWord);
+      socket.off(GameEvent.CHOOSING_WORD, initTimerForWord);
       socket.off(GameEvent.TURN_END, endTurn);
+      socket.off(GameEvent.GAME_ENDED, endTurn);
     };
   });
 
   return (
     <div className="w-full bg-background-paper rounded-lg text-primary font-bold py-2 px-4 flex items-center justify-between z-50  border-2 border-primary-400">
       <span className="text-lg font-semibold">{timer}</span>
-      <span className="text-xl font-bold items-self-center">{word}</span>
+      <span className="text-xl font-bold items-self-center flex gap-5">
+        {typeof word === "string"
+          ? word
+          : word.map((n, i) => (
+              <span className="relative" key={i}>
+                {new Array(n).fill("_").join(" ")}{" "}
+                <span className="text-xs -right-2 absolute">{n}</span>
+              </span>
+            ))}
+      </span>
     </div>
   );
 };

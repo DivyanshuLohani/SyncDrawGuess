@@ -1,47 +1,65 @@
 import fs from "fs";
 import path from "path";
+import { Languages } from "../types";
 
-const WORDS_FILE_PATH = path.join(__dirname, "../words.txt");
+const WORDS_DIR = path.join(__dirname, "../../words");
 
-// Function to read the file and return a random word
-export function getRandomWords(n: number = 1): Promise<string[]> {
+// Cache words in memory
+const wordsCache: Record<Languages, string[]> = {} as Record<
+  Languages,
+  string[]
+>;
+
+// Load words for a language
+function loadWords(language: Languages): Promise<string[]> {
   return new Promise((resolve, reject) => {
-    fs.readFile(WORDS_FILE_PATH, "utf8", (err, data) => {
+    if (wordsCache[language]) {
+      return resolve(wordsCache[language]);
+    }
+
+    const filePath = path.join(WORDS_DIR, `${language}.txt`);
+    fs.readFile(filePath, "utf8", (err, data) => {
       if (err) {
-        reject(err);
-        return;
+        return reject(
+          new Error(`Failed to load words for ${language}: ${err.message}`)
+        );
       }
 
-      // Split the file content into lines
       const words = data
         .split("\n")
         .map((word) => word.trim())
-        .filter((word) => word.length > 0);
-
+        .filter(Boolean);
       if (words.length === 0) {
-        reject(new Error("No words found in the file"));
-        return;
+        return reject(new Error(`No words found in ${filePath}`));
       }
 
-      let randomWords: string[] = [];
-      for (let i = 0; i < n; i++) {
-        const randomIndex = Math.floor(Math.random() * words.length);
-        const randomWord = words[randomIndex];
-        randomWords.push(randomWord);
-      }
-
-      // Pick a random word
-      resolve(randomWords);
+      wordsCache[language] = words;
+      resolve(words);
     });
   });
 }
-export function convertToUnderscores(phrase) {
-  const words = phrase.split(" ");
-  const underscores = words.map((word) => {
-    return word
-      .split("")
-      .map(() => "_")
-      .join(" ");
-  });
-  return underscores.join("   ");
+
+// Function to get random words
+export async function getRandomWords(
+  n: number = 1,
+  language: Languages
+): Promise<string[]> {
+  try {
+    const words = await loadWords(language);
+    if (words.length < n) {
+      throw new Error(`Not enough words available in ${language}`);
+    }
+
+    return Array.from(
+      { length: n },
+      () => words[Math.floor(Math.random() * words.length)]
+    );
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Convert phrase to underscores
+export function convertToUnderscores(phrase: string): number[] {
+  return phrase.split(" ").map((word) => word.length);
 }

@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
-import { setRoom } from "../utils/redis";
-import { Player, PlayerData, Room } from "../types";
-import { getRoom as gR } from "../utils/redis";
+import { setRedisRoom } from "../utils/redis";
+import { Languages, Player, PlayerData, Room, Settings } from "../types";
+import { getRedisRoom as gR } from "../utils/redis";
 
 export function generateRoomId() {
   return String("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").replace(
@@ -15,7 +15,11 @@ export function generateRoomId() {
   );
 }
 
-export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
+export async function generateEmptyRoom(
+  socket: Socket,
+  host: PlayerData,
+  isPrivate: boolean = false
+) {
   const roomId = generateRoomId();
   const player: Player = {
     ...host,
@@ -36,23 +40,29 @@ export async function generateEmptyRoom(socket: Socket, host: PlayerData) {
       word: "",
       currentPlayer: 0,
     },
-    settings: {
-      players: 3,
-      rounds: 3,
-      drawTime: 60,
-      customWords: [],
-      onlyCustomWords: false,
-    },
+    settings: defaultSettings,
+    isPrivate,
   };
 
-  await setRoom(roomId, room);
+  await setRedisRoom(roomId, room);
   return roomId;
 }
 
-export async function getRoom(socket: Socket) {
+export async function getRoomFromSocket(socket: Socket) {
   if (!socket) return null;
   const roomId = Array.from(socket.rooms)[1] as string;
   if (!roomId) return null;
   const room = await gR(roomId);
   return room;
 }
+
+const defaultSettings: Settings = {
+  players: 8,
+  rounds: 5,
+  drawTime: 60,
+  customWords: [],
+  onlyCustomWords: false,
+  language: Languages.en,
+  wordCount: 3,
+  hints: 2,
+};

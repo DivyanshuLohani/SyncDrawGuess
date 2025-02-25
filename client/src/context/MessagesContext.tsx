@@ -1,19 +1,11 @@
 import React, { createContext, useEffect, useState } from "react";
-import { GameEvent, Player } from "../types";
+import { EndTurnData, GameEvent, Player } from "../types";
 import { socket } from "../socketHandler";
 import { IMessage, MessageType } from "../components/Chat/Message";
 import { useRoom } from "./RoomContext";
 
 interface MessagesContextValue {
   messages: IMessage[];
-  addMessageToChat: (message: string, player: Player) => void;
-  addPlayerJoinMessage: (player: Player) => void;
-  addPlayerLeftMessage: (player: Player) => void;
-  addErrorMessage: (message: string) => void;
-  addGuessedMessage: (player: Player) => void;
-  addWordChosen: () => void;
-  addWordWas: (_: unknown, word: string) => void;
-  clearChat: () => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -85,13 +77,13 @@ export default function MessagesContext({
     ]);
   }
 
-  function addWordWas(_: unknown, word: string) {
+  function addWordWas(_: unknown, data: EndTurnData) {
     if (!currentPlayer) return;
     setMessages([
       ...messages,
       {
         sender: "",
-        message: word,
+        message: data.word,
         type: MessageType.WordWas,
       },
     ]);
@@ -135,14 +127,6 @@ export default function MessagesContext({
     <MessageContext.Provider
       value={{
         messages,
-        addMessageToChat,
-        addPlayerJoinMessage,
-        addPlayerLeftMessage,
-        addErrorMessage,
-        addGuessedMessage,
-        addWordChosen,
-        addWordWas,
-        clearChat,
       }}
     >
       {children}
