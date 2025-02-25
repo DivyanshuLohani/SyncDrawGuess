@@ -40,7 +40,7 @@ const PlayerScores: React.FC = () => {
   });
 
   return (
-    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl shadow-lg border-2 border-primary-400 h-full w-3/4 sm:w-[300px]">
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-sm shadow-lg border-2 border-primary-400 h-full w-2/4 sm:w-[300px]">
       {/* <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
         <Users className="mt-2" />
         <span>Players</span>
@@ -51,7 +51,7 @@ const PlayerScores: React.FC = () => {
           Round {currentRound} of {settings.rounds}
         </p>
       )}
-      <ul className="mt-4 space-y-1 scale-95">
+      <ul className="mt-1 space-y-1">
         {displayers
           .sort((a, b) => b.score - a.score)
           .map((player, index) => (

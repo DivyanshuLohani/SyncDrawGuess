@@ -1,0 +1,151 @@
+import React, { createContext, useEffect, useState } from "react";
+import { GameEvent, Player } from "../types";
+import { socket } from "../socketHandler";
+import { IMessage, MessageType } from "../components/Chat/Message";
+import { useRoom } from "./RoomContext";
+
+interface MessagesContextValue {
+  messages: IMessage[];
+  addMessageToChat: (message: string, player: Player) => void;
+  addPlayerJoinMessage: (player: Player) => void;
+  addPlayerLeftMessage: (player: Player) => void;
+  addErrorMessage: (message: string) => void;
+  addGuessedMessage: (player: Player) => void;
+  addWordChosen: () => void;
+  addWordWas: (_: unknown, word: string) => void;
+  clearChat: () => void;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const MessageContext = createContext<MessagesContextValue | undefined>(
+  undefined
+);
+
+export default function MessagesContext({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const { currentPlayer, me, myTurn } = useRoom();
+
+  function addMessageToChat(message: string, player: Player) {
+    if (player.guessed && player.playerId != socket.id) return;
+    if (currentPlayer?.playerId === player.playerId && !myTurn) return;
+    if (myTurn) {
+      setMessages([
+        ...messages,
+        { sender: player.name, message, type: MessageType.GuessClose },
+      ]);
+    }
+    setMessages([
+      ...messages,
+      { sender: player.name, message, type: MessageType.Guess },
+    ]);
+  }
+
+  function addPlayerJoinMessage(player: Player) {
+    setMessages([
+      ...messages,
+      { sender: player.name, message: "", type: MessageType.PlayerJoin },
+    ]);
+  }
+  function addPlayerLeftMessage(player: Player) {
+    setMessages([
+      ...messages,
+      { sender: player.name, message: "", type: MessageType.PlayerLeft },
+    ]);
+  }
+  function addErrorMessage(message: string) {
+    setMessages([
+      ...messages,
+      { sender: "", message, type: MessageType.Error },
+    ]);
+  }
+
+  function addGuessedMessage(player: Player) {
+    setMessages([
+      ...messages,
+      {
+        sender: player.name,
+        message: "has guessed the word",
+        type: MessageType.WordGuessed,
+      },
+    ]);
+  }
+  function addWordChosen() {
+    if (!currentPlayer) return;
+    setMessages([
+      ...messages,
+      {
+        sender: currentPlayer.name,
+        message: "is now drawing",
+        type: MessageType.WordChoosen,
+      },
+    ]);
+  }
+
+  function addWordWas(_: unknown, word: string) {
+    if (!currentPlayer) return;
+    setMessages([
+      ...messages,
+      {
+        sender: "",
+        message: word,
+        type: MessageType.WordWas,
+      },
+    ]);
+  }
+
+  function clearChat() {
+    setMessages([]);
+  }
+
+  useEffect(() => {
+    if (me) {
+      addPlayerJoinMessage(me);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    socket.on(GameEvent.GAME_STARTED, clearChat);
+    socket.on(GameEvent.GUESS, addMessageToChat);
+    socket.on(GameEvent.GUESSED, addGuessedMessage);
+    socket.on(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
+    socket.on(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+    socket.on(GameEvent.GUESSED, addGuessedMessage);
+    socket.on(GameEvent.WORD_CHOSEN, addWordChosen);
+    socket.on(GameEvent.TURN_END, addWordWas);
+    socket.on("error", addErrorMessage);
+
+    return () => {
+      socket.on(GameEvent.GAME_STARTED, clearChat);
+      socket.off(GameEvent.GUESS, addMessageToChat);
+      socket.off(GameEvent.PLAYER_JOINED, addPlayerJoinMessage);
+      socket.off(GameEvent.PLAYER_LEFT, addPlayerLeftMessage);
+      socket.off(GameEvent.GUESSED, addGuessedMessage);
+      socket.off(GameEvent.WORD_CHOSEN, addWordChosen);
+      socket.off(GameEvent.TURN_END, addWordWas);
+      socket.off("error", addErrorMessage);
+    };
+  });
+
+  return (
+    <MessageContext.Provider
+      value={{
+        messages,
+        addMessageToChat,
+        addPlayerJoinMessage,
+        addPlayerLeftMessage,
+        addErrorMessage,
+        addGuessedMessage,
+        addWordChosen,
+        addWordWas,
+        clearChat,
+      }}
+    >
+      {children}
+    </MessageContext.Provider>
+  );
+}

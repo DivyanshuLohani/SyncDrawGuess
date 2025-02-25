@@ -46,7 +46,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const lineWidths = [1, 2, 4, 6, 8]; // Line widths options
 
   return (
-    <div className="p-4 bg-gray-200 shadow-md border-t border-gray-300 relative">
+    <div className="p-4 bg-gray-200 shadow-md border-t border-gray-300 relative hidden">
       <div className="mb-4 flex space-x-2">
         {lineWidths.map((width) => (
           <div
