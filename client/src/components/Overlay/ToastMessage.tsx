@@ -27,7 +27,7 @@ const ToastStack = () => {
   }, [messages]);
 
   return (
-    <div className="absolute bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div className="absolute bottom-4 right-4 z-50 flex flex-col gap-2 sm:hidden">
       <AnimatePresence>
         {visibleMsgs.map((msg, i) => (
           <motion.div

@@ -94,7 +94,6 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     const cP = room.players[room.gameState.currentPlayer] || null;
     if (cP && socket.id === cP.playerId) setIsmyTrun(true);
     else setIsmyTrun(false);
-    // TODO: Add a timeout to change the state
     joinedRoom(room);
   }
 
