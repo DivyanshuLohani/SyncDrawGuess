@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { socket } from "../socketHandler";
 import { GameEvent, Player } from "../types";
 import { useRoom } from "../context/RoomContext";
-import { MessageSquareMoreIcon, SendIcon } from "lucide-react";
+import { SendIcon } from "lucide-react";
 import Button from "./ui/Button";
 import useIsMobile from "../hooks/useIsMobile";
+import { AnimatePresence, motion } from "framer-motion";
 
 enum MessageType {
   Guess = "guess",
@@ -149,19 +150,21 @@ const Chat = () => {
   }, [messages]);
 
   return (
-    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-1 rounded-xl shadow-lg border-2 border-primary-400 h-full relative">
-      <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-1 rounded-xl shadow-lg border-2 border-primary-400 ">
+      {/* <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
         <MessageSquareMoreIcon className="mt-2" />
         <span>Chat</span>
-      </h2>
+      </h2> */}
 
       <div
-        className="h-full max-h-screen overflow-y-auto mb-4 sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 "
+        className="h-[400px] sm:h-[600px] overflow-y-auto mb-4 sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth "
         ref={messagesBottomDiv}
       >
-        {messages.map((msg, index) => (
-          <Message key={index} message={msg} />
-        ))}
+        <AnimatePresence>
+          {messages.map((msg, index) => (
+            <Message key={index} message={msg} />
+          ))}
+        </AnimatePresence>
       </div>
 
       <form
@@ -252,11 +255,14 @@ const Message = ({ message }: { message: IMessage }) => {
   }
 
   return (
-    <div
-      className={`mb-1 px-2 py-1 rounded-md ${bgClass} transition-colors duration-200 text-sm sm:text-base`}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`mb-1 p-1 sm:p-0 sm:px-2 sm:py-1 rounded-md ${bgClass} transition-colors duration-200 text-sm sm:text-base`}
     >
       {content}
-    </div>
+    </motion.div>
   );
 };
 export default Chat;

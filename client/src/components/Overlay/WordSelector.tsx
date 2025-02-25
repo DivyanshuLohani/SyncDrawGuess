@@ -11,7 +11,7 @@ export default function WordSelector({ words }: { words: string[] }) {
     <div className="flex flex-wrap gap-2 items-center justify-center">
       {words.map((e) => {
         return (
-          <Button onClick={() => handleWordSelect(e)} variant="outline" key={e}>
+          <Button onClick={() => handleWordSelect(e)} color="" key={e}>
             {e}
           </Button>
         );

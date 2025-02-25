@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { GameEvent, Player, Room } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
-import { CrownIcon, Users } from "lucide-react";
+import { CrownIcon } from "lucide-react";
 import clsx from "clsx";
 
 const PlayerScores: React.FC = () => {
@@ -40,43 +40,50 @@ const PlayerScores: React.FC = () => {
   });
 
   return (
-    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-1 rounded-xl shadow-lg border-2 border-primary-400 h-full">
-      <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl shadow-lg border-2 border-primary-400 h-full w-3/4 sm:w-[300px]">
+      {/* <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
         <Users className="mt-2" />
         <span>Players</span>
-      </h2>
+      </h2> */}
 
       {currentRound > 0 && (
         <p className="text-center text-primary-400 font-semibold mt-2 bg-background-paper rounded-lg py-1">
           Round {currentRound} of {settings.rounds}
         </p>
       )}
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-4 space-y-1 scale-95">
         {displayers
           .sort((a, b) => b.score - a.score)
           .map((player, index) => (
             <div
               className={clsx(
-                "flex items-center bg-white border border-gray-300 rounded-lg px-3 py-2 shadow gap-5",
+                "relative flex w-full h-10 sm:h-16 p-1 rounded-lg",
                 {
                   "bg-primary-100": player.playerId === currentPlayer?.playerId,
+                  "bg-white": player.playerId !== currentPlayer?.playerId,
                 }
               )}
               key={player.playerId}
             >
-              <div className="font-bold">
+              <div className="font-bold text-xs sm:text-base ablsolute left-2 top-2 flex flex-col justify-center">
                 <span>#{index + 1} </span>
                 {player.playerId === creator && (
                   <CrownIcon className="text-gray-500 mr-2" size={20} />
                 )}
               </div>
-              <div className="flex-1">
-                <span className="text-primary truncate font-bold text-sm sm:text-base">
-                  {player.name}
+              <div className="text-center absolute inset-0 flex items-center justify-center flex-col sm:-ml-4">
+                <span className="text-primary truncate font-bold text-xs sm:text-base">
+                  {player.name} {player.playerId === socket.id && "(You)"}
                 </span>
                 <p className="text-xs text-gray-500">{player.score} points</p>
               </div>
-              <img src={""} alt="avatar" className="w-8 h-8 rounded-md" />
+              <div className="absolute right-0 h-full z-10 flex items-center">
+                <img
+                  src={"/logo.png"}
+                  alt="avatar"
+                  className="w-10 h-10 sm:h-20 sm:w-20"
+                />
+              </div>
             </div>
           ))}
       </ul>

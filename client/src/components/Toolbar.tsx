@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { GameEvent } from "../types";
+import { GameEvent, RoomState } from "../types";
 import { socket } from "../socketHandler";
 import Button from "./ui/Button";
+import { useRoom } from "../context/RoomContext";
 
 const colors = [
   "#000000", // Black
@@ -30,6 +31,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 }) => {
   const [selectedLineWidth, setSelectedLineWidth] = useState<number>(5);
   const [selectedColor, setSelectedColor] = useState<string>("#000000");
+  const { myTurn, roomState } = useRoom();
 
   const handleLineWidthChange = (width: number) => {
     setSelectedLineWidth(width);
@@ -44,7 +46,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const lineWidths = [1, 2, 4, 6, 8]; // Line widths options
 
   return (
-    <div className="p-4 bg-gray-200 shadow-md border-t border-gray-300">
+    <div className="p-4 bg-gray-200 shadow-md border-t border-gray-300 relative">
       <div className="mb-4 flex space-x-2">
         {lineWidths.map((width) => (
           <div
@@ -95,6 +97,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           />
         ))}
       </div>
+      {!myTurn && roomState === RoomState.DRAWING && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black/20 bg-opacity-70 flex items-center justify-center cursor-not-allowed" />
+      )}
     </div>
   );
 };

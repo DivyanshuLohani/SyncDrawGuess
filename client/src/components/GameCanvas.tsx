@@ -152,14 +152,13 @@ const GameCanvas = ({ room }: { room: Room }) => {
           height={600}
         />
       </div>
-      {myTurn && (
-        <Toolbar
-          onLineWidthChange={setLineWidth}
-          onColorChange={setColor}
-          handleUndo={handleUndo}
-          handleClear={clearCanvas}
-        />
-      )}
+
+      <Toolbar
+        onLineWidthChange={setLineWidth}
+        onColorChange={setColor}
+        handleUndo={handleUndo}
+        handleClear={clearCanvas}
+      />
     </>
   );
 };

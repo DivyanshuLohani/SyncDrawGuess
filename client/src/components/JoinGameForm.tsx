@@ -50,6 +50,7 @@ export default function JoinGameForm() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            maxLength={13}
             className="w-full p-2 border border-gray-300 rounded-md"
           />
         </div>
