@@ -9,6 +9,10 @@ const GameHeader = () => {
   const { settings } = useRoom();
   const [timer, setTimer] = useState<number>(settings.drawTime);
 
+  useEffect(() => {
+    console.log("Timer", timer);
+  }, [timer]);
+
   function initTimer({
     word,
     time,
@@ -20,9 +24,7 @@ const GameHeader = () => {
     setTimer(time);
     startInterval(
       setInterval(() => {
-        if (timer > 0) {
-          setTimer((e) => (e > 0 ? e - 1 : e));
-        }
+        setTimer((e) => (e > 0 ? e - 1 : e));
       }, 1000)
     );
 
@@ -34,9 +36,7 @@ const GameHeader = () => {
 
     startInterval(
       setInterval(() => {
-        if (timer > 0) {
-          setTimer((e) => (e > 0 ? e - 1 : e));
-        }
+        setTimer((e) => (e > 0 ? e - 1 : e));
       }, 1000)
     );
   }
@@ -66,7 +66,7 @@ const GameHeader = () => {
   return (
     <div className="w-full bg-background-paper rounded-lg text-primary font-bold py-2 px-4 flex items-center justify-between z-50  border-2 border-primary-400">
       <span className="text-lg font-semibold">{timer}</span>
-      <span className="text-xl font-bold items-self-center flex gap-5">
+      <span className="text-xl font-bold text-center flex gap-5">
         {typeof word === "string"
           ? word
           : word.map((n, i) => (

@@ -23,7 +23,6 @@ export default function MessagesContext({
 
   function addMessageToChat(message: string, player: Player) {
     if (player.guessed && player.playerId != socket.id) return;
-    if (currentPlayer?.playerId === player.playerId && !myTurn) return;
     if (myTurn) {
       setMessages([
         ...messages,
@@ -42,6 +41,7 @@ export default function MessagesContext({
       { sender: player.name, message: "", type: MessageType.PlayerJoin },
     ]);
   }
+
   function addPlayerLeftMessage(player: Player) {
     setMessages([
       ...messages,

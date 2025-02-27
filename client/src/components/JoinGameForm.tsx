@@ -24,7 +24,7 @@ export default function JoinGameForm() {
     };
   }, []);
 
-  const handleJoin = () => {
+  const handleJoin = (isPrivate: boolean = false) => {
     if (name.trim() === "") {
       alert("Please enter your name");
       return;
@@ -35,7 +35,7 @@ export default function JoinGameForm() {
       GameEvent.JOIN_ROOM,
       { name, color },
       roomId ?? undefined,
-      true
+      isPrivate
     );
   };
 
@@ -65,12 +65,23 @@ export default function JoinGameForm() {
         </div>
 
         {/* Play Button */}
-        <Button variant="success" size="lg" fullWidth onClick={handleJoin}>
+        <Button
+          variant="success"
+          size="lg"
+          fullWidth
+          onClick={() => handleJoin(false)}
+        >
           Play!
         </Button>
 
         {/* Create Private Room Button */}
-        <Button variant="info" size="lg" fullWidth className="mt-3">
+        <Button
+          variant="info"
+          size="lg"
+          fullWidth
+          className="mt-3"
+          onClick={() => handleJoin(true)}
+        >
           Create Private Room
         </Button>
       </div>

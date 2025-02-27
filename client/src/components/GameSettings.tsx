@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GameEvent, SettingValue } from "../types";
+import { GameEvent, Settings, SettingValue } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
 import RoomLink from "./RoomLink";
@@ -9,26 +9,24 @@ const GameSettings: React.FC = () => {
   const { settings, creator, currentRound, changeSetting } = useRoom();
   const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
   // State for settings
-  const [numPlayers, setNumPlayers] = useState<number>(settings.players);
-  const [drawingTime, setDrawingTime] = useState<number>(settings.drawTime);
-  const [rounds, setRounds] = useState<number>(settings.rounds);
-  const [wordCount, setWordCount] = useState<number>(settings.wordCount);
+  const [gameSettings, setGameSettings] = useState<Settings>(settings);
+  const [customWords, setCustomWords] = useState<string>("");
 
   useEffect(() => {
     function handleSettingChange(setting: SettingValue, value: number) {
       changeSetting(setting, value.toString());
       switch (setting) {
         case SettingValue.players:
-          setNumPlayers(value);
+          setGameSettings({ ...gameSettings, players: value });
           break;
         case SettingValue.drawTime:
-          setDrawingTime(value);
+          setGameSettings({ ...gameSettings, drawTime: value });
           break;
         case SettingValue.rounds:
-          setRounds(value);
+          setGameSettings({ ...gameSettings, rounds: value });
           break;
         case SettingValue.wordCount:
-          setWordCount(value);
+          setGameSettings({ ...gameSettings, wordCount: value });
           break;
         default:
           break;
@@ -55,7 +53,10 @@ const GameSettings: React.FC = () => {
   ) => {
     if (socket.id != creator) return;
 
-    setNumPlayers(parseInt(event.target.value, 10));
+    setGameSettings({
+      ...gameSettings,
+      players: parseInt(event.target.value, 10),
+    });
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.players,
@@ -68,7 +69,10 @@ const GameSettings: React.FC = () => {
   ) => {
     if (socket.id != creator) return;
 
-    setDrawingTime(parseInt(event.target.value, 10));
+    setGameSettings({
+      ...gameSettings,
+      drawTime: parseInt(event.target.value, 10),
+    });
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.drawTime,
@@ -79,7 +83,10 @@ const GameSettings: React.FC = () => {
   const handleRoundsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (socket.id != creator) return;
 
-    setRounds(parseInt(event.target.value, 10));
+    setGameSettings({
+      ...gameSettings,
+      rounds: parseInt(event.target.value, 10),
+    });
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.rounds,
@@ -90,18 +97,39 @@ const GameSettings: React.FC = () => {
   const handleWordsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (socket.id != creator) return;
 
-    setWordCount(parseInt(event.target.value, 10));
+    setGameSettings({
+      ...gameSettings,
+      wordCount: parseInt(event.target.value, 10),
+    });
     socket.emit(
       GameEvent.CHANGE_SETTIING,
       SettingValue.wordCount,
       parseInt(event.target.value)
     );
   };
+  const handleCustomWordsOnly = () => {
+    if (socket.id != creator) return;
+    const customWordsOnly = !gameSettings.onlyCustomWords;
+    setGameSettings({
+      ...gameSettings,
+      onlyCustomWords: !gameSettings.onlyCustomWords,
+    });
+    socket.emit(
+      GameEvent.CHANGE_SETTIING,
+      SettingValue.onlyCustomWords,
+      customWordsOnly
+    );
+  };
   const isOwner = creator === socket.id;
 
   const handleStart = () => {
     if (socket.id != creator) return;
-    socket.emit(GameEvent.START_GAME);
+    socket.emit(GameEvent.START_GAME, {
+      words: customWords
+        .split(",")
+        .map((w) => w.trim())
+        .join(","),
+    });
   };
 
   const handleEnd = ({ time }: { time: number }) => {
@@ -123,7 +151,7 @@ const GameSettings: React.FC = () => {
           </label>
           <select
             id="numPlayers"
-            value={numPlayers}
+            value={gameSettings.players}
             onChange={handleNumPlayersChange}
             disabled={!isOwner}
             className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
@@ -144,7 +172,7 @@ const GameSettings: React.FC = () => {
           </label>
           <select
             id="drawingTime"
-            value={drawingTime}
+            value={gameSettings.drawTime}
             onChange={handleDrawingTimeChange}
             disabled={!isOwner}
             className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
@@ -165,7 +193,7 @@ const GameSettings: React.FC = () => {
           </label>
           <select
             id="rounds"
-            value={rounds}
+            value={gameSettings.rounds}
             onChange={handleRoundsChange}
             disabled={!isOwner}
             className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
@@ -186,7 +214,7 @@ const GameSettings: React.FC = () => {
           </label>
           <select
             id="words"
-            value={wordCount}
+            value={gameSettings.wordCount}
             onChange={handleWordsChange}
             disabled={!isOwner}
             className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
@@ -198,6 +226,39 @@ const GameSettings: React.FC = () => {
             ))}
           </select>
         </div>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="custom-words"
+            className="block text-sm font-medium text-gray-200 mb-1"
+          >
+            Custom Words
+          </label>
+          <div className="flex items-center">
+            <label
+              htmlFor="custom-words-only"
+              className="text-sm font-medium text-gray-200 ml-2 cursor-pointer"
+            >
+              Use only custom words
+            </label>
+            <input
+              type="checkbox"
+              id="custom-words-only"
+              className="ml-1 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+              disabled={!isOwner}
+              checked={gameSettings.onlyCustomWords}
+              onChange={handleCustomWordsOnly}
+            />
+          </div>
+        </div>
+        <textarea
+          name="words-input"
+          className="w-full border rounded-lg p-2 outline-none"
+          id=""
+          placeholder="Type words separated by commas, maximum 2000 characters"
+          value={customWords}
+          onChange={(e) => setCustomWords(e.target.value)}
+        ></textarea>
+        {/* <CustomWordsInput /> */}
       </div>
       <div className="mt-6 flex gap-5 justify-end">
         <Button

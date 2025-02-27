@@ -75,6 +75,14 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [me, setMe] = useState<Player | null>(null);
   const [roomState, setRoomState] = useState<RoomState>(RoomState.NOT_STARTED);
 
+  useEffect(() => {
+    console.log(roomState);
+  }, [roomState]);
+
+  useEffect(() => {
+    console.log(myTurn);
+  }, [myTurn]);
+
   function addPlayer(player: Player) {
     setRoom((p) => {
       return { ...p, players: [...p.players, player] };

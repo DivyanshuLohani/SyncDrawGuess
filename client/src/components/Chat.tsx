@@ -7,11 +7,14 @@ import useIsMobile from "../hooks/useIsMobile";
 import { AnimatePresence } from "framer-motion";
 import Message from "./Chat/Message";
 import useMessages from "../hooks/useMessages";
+import { useRoom } from "../context/RoomContext";
+import clsx from "clsx";
 
 const Chat = () => {
   const [message, setMessage] = useState<string>("");
   const messagesBottomDiv = useRef<HTMLDivElement | null>(null);
   const { messages } = useMessages();
+  const { myTurn } = useRoom();
 
   const isMobile = useIsMobile();
 
@@ -40,7 +43,12 @@ const Chat = () => {
       </h2> */}
 
       <div
-        className="h-[400px] sm:h-[600px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth "
+        className={clsx(
+          "h-[400px] sm:h-[600px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth",
+          {
+            "sm:h-[715px]": myTurn,
+          }
+        )}
         ref={messagesBottomDiv}
       >
         <AnimatePresence>
