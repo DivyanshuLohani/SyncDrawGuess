@@ -3,6 +3,7 @@ import path from "path";
 import { Languages } from "../types";
 
 const WORDS_DIR = path.join(__dirname, "../../words");
+const CUSTOM_WORDS_WEIGHT = 3;
 
 // Cache words in memory
 const wordsCache: Record<Languages, string[]> = {} as Record<
@@ -42,18 +43,38 @@ function loadWords(language: Languages): Promise<string[]> {
 // Function to get random words
 export async function getRandomWords(
   n: number = 1,
-  language: Languages
+  language: Languages,
+  onlyCustomWords: boolean = false,
+  customWords: string[] = []
 ): Promise<string[]> {
   try {
-    const words = await loadWords(language);
-    if (words.length < n) {
-      throw new Error(`Not enough words available in ${language}`);
+    let words: string[] = [];
+
+    if (onlyCustomWords) {
+      if (customWords.length < n) {
+        throw new Error(`Not enough custom words provided`);
+      }
+      words = customWords;
+    } else {
+      const loadedWords = await loadWords(language);
+
+      words = [
+        ...loadedWords,
+        ...Array(CUSTOM_WORDS_WEIGHT).fill(customWords).flat(),
+      ];
+      if (words.length < n) {
+        throw new Error(`Not enough words available in ${language}`);
+      }
     }
 
-    return Array.from(
-      { length: n },
-      () => words[Math.floor(Math.random() * words.length)]
-    );
+    // Shuffle the words array
+    for (let i = words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [words[i], words[j]] = [words[j], words[i]];
+    }
+
+    // Return the first n words
+    return words.slice(0, n);
   } catch (error) {
     throw error;
   }

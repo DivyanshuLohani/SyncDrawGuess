@@ -63,3 +63,36 @@ export enum Languages {
   tr = "Turkish",
   zh = "Chinese",
 }
+
+export enum GameEvent {
+  // CLient Events
+  CONNECT = "connect",
+  DISCONNECT = "disconnecting",
+  JOIN_ROOM = "joinRoom",
+  LEAVE_ROOM = "leaveRoom",
+  START_GAME = "startGame",
+  DRAW = "draw",
+  DRAW_CLEAR = "clear",
+  DRAW_UNDO = "undo",
+  GUESS = "guess",
+  CHANGE_SETTIING = "changeSettings",
+  WORD_SELECT = "wordSelect",
+
+  // Server Events
+  JOINED_ROOM = "joinedRoom",
+  PLAYER_JOINED = "playerJoined",
+  PLAYER_LEFT = "playerLeft",
+  GAME_STARTED = "gameStarted",
+  GAME_ENDED = "gameEnded",
+  DRAW_DATA = "drawData",
+  CLEAR_DRAW = "clearDraw",
+  UNDO_DRAW = "undoDraw",
+  GUESSED = "guessed",
+  TURN_END = "turnEnded",
+  CHOOSE_WORD = "chooseWord",
+  CHOOSING_WORD = "choosingWord",
+  WORD_CHOSEN = "wordChosen",
+  GUESS_WORD_CHOSEN = "guessWordChosen",
+  SETTINGS_CHANGED = "settingsChanged",
+  GUESS_FAIL = "guessFail",
+}

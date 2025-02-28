@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
-import { PlayerData, Room } from "../types";
+import { PlayerData, Room, Settings } from "../types";
 import { deleteRedisRoom, getRedisRoom, setRedisRoom } from "../utils/redis";
-import { GameEvent } from "../socket/socketHandlers";
+import { GameEvent } from "../types";
 import { convertToUnderscores, getRandomWords } from "../utils/word";
 import { generateEmptyRoom } from "./gameController";
 import { getRoomFromSocket } from "./gameController";
@@ -14,15 +14,24 @@ import {
 const DRAWER_POINTS = 50;
 const BONUS_PER_GUESS = 10;
 const timers = new Map();
+const hintTimers = new Map();
 
 function clearTimers(roomId: string) {
-  if (timers.get(roomId)) {
-    clearTimeout(timers.get(roomId));
+  const timer = timers.get(roomId);
+  const hintTimer = hintTimers.get(roomId);
+  console.log(timer, hintTimer);
+  if (timer) {
+    clearTimeout(timer);
     timers.delete(roomId);
+  }
+  if (hintTimer) {
+    clearTimeout(hintTimer);
+    hintTimers.delete(roomId);
   }
 }
 
 export async function startGame(room: Room, io: Server) {
+  clearTimers(room.roomId);
   room.gameState.currentRound = 1;
   room.gameState.currentPlayer = 0;
   await setRedisRoom(room.roomId, room);
@@ -120,13 +129,16 @@ export async function guessWord(
 export async function nextRound(roomId: string, io: Server) {
   const room = await getRedisRoom(roomId);
   if (!room) return;
+  // Set the current player
   const currentPlayer = room.players[room.gameState.currentPlayer];
-  if (!currentPlayer) return;
+  if (!currentPlayer) throw new Error("Player not found"); // this line is never possible
 
   // Get random words
   const words = await getRandomWords(
     room.settings.wordCount,
-    room.settings.language
+    room.settings.language,
+    room.settings.onlyCustomWords,
+    room.settings.customWords
   );
   io.to(currentPlayer.playerId).emit(GameEvent.CHOOSE_WORD, {
     words,
@@ -264,3 +276,61 @@ export async function handleDrawAction(
 
   await setRedisRoom(room.roomId, room);
 }
+
+export const handlePlayerLeft = async (socket: Socket, io: Server) => {
+  const room = await getRoomFromSocket(socket);
+  if (!room) return;
+
+  const currentPlayer = room.players[room.gameState.currentPlayer];
+  if (currentPlayer && currentPlayer.playerId === socket.id) {
+    await endRound(room.roomId, io, "left");
+  }
+
+  const player = room.players.find((e) => e.playerId === socket.id);
+  if (!player) return;
+  room.players = room.players.filter((e) => e.playerId != socket.id);
+  if (room.players.length === 0) {
+    await deleteRedisRoom(room.roomId);
+    return;
+  }
+
+  if (
+    room.creator === player.playerId &&
+    room.players.length > 0 &&
+    room.isPrivate
+  ) {
+    room.creator = room.players[0].playerId;
+  }
+
+  await setRedisRoom(room.roomId, room);
+  socket.to(room.roomId).emit(GameEvent.PLAYER_LEFT, player);
+  if (room.players.length === 1 && room.gameState.currentRound >= 1) {
+    // No players left in the room
+    await endGame(room.roomId, io);
+  }
+};
+
+export const handleSettingsChange = async (
+  socket: Socket,
+  io: Server,
+  setting: keyof Settings,
+  value: any
+) => {
+  if (typeof setting !== "string") return;
+
+  const room = await getRoomFromSocket(socket);
+  if (!room) return;
+
+  if (!(setting in room.settings))
+    return socket.emit("error", "Invalid setting value");
+
+  const settingType = typeof room.settings[setting];
+  if (typeof value !== settingType)
+    return socket.emit("error", `Invalid value type for ${setting}`);
+
+  // @ts-ignore
+  room.settings[setting] = value as SettingValue;
+
+  await setRedisRoom(room.roomId, room);
+  io.to(room.roomId).emit(GameEvent.SETTINGS_CHANGED, setting, value);
+};
