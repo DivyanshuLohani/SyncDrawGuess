@@ -44,7 +44,7 @@ const Chat = () => {
 
       <div
         className={clsx(
-          "h-[400px] sm:h-[600px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth",
+          "h-[400px] sm:h-[599px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth",
           {
             "sm:h-[715px]": myTurn,
           }

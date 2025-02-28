@@ -60,7 +60,7 @@ const PlayerScores: React.FC = () => {
             .map((player, index) => (
               <motion.div
                 className={clsx(
-                  "relative flex w-full h-10 sm:h-16 p-1 rounded-lg",
+                  "relative flex w-full h-10 sm:h-16 p-1 rounded-lg overflow-hidden",
                   {
                     "bg-primary-100":
                       player.playerId === currentPlayer?.playerId,

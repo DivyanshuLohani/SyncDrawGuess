@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function CustomWordsInput() {
-  const [words, setWords] = useState<string[]>([]);
+interface CustomWordsInputProps {
+  words: string[];
+  setWords: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
+export default function CustomWordsInput({
+  words,
+  setWords,
+}: CustomWordsInputProps) {
   const [input, setInput] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

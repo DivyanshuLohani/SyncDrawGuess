@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { GameEvent, Settings, SettingValue } from "../types";
+import { GameEvent, Languages, Settings, SettingValue } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
 import RoomLink from "./RoomLink";
 import Button from "./ui/Button";
+import {
+  Clock,
+  Gamepad2,
+  Globe,
+  Lightbulb,
+  RotateCw,
+  Users,
+} from "lucide-react";
 
 const GameSettings: React.FC = () => {
   const { settings, creator, currentRound, changeSetting } = useRoom();
   const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
   // State for settings
   const [gameSettings, setGameSettings] = useState<Settings>(settings);
-  const [customWords, setCustomWords] = useState<string>("");
+  const [customWords, setCustomWords] = useState<string>(
+    settings.customWords.join(",")
+  );
 
   useEffect(() => {
     function handleSettingChange(setting: SettingValue, value: number) {
@@ -125,11 +135,38 @@ const GameSettings: React.FC = () => {
   const handleStart = () => {
     if (socket.id != creator) return;
     socket.emit(GameEvent.START_GAME, {
-      words: customWords
-        .split(",")
-        .map((w) => w.trim())
-        .join(","),
+      words: customWords.split(",").map((w) => w.trim()),
     });
+  };
+
+  const handleHints = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (socket.id != creator) return;
+
+    setGameSettings({
+      ...gameSettings,
+      hints: parseInt(event.target.value, 10),
+    });
+    socket.emit(
+      GameEvent.CHANGE_SETTIING,
+      SettingValue.hints,
+      parseInt(event.target.value)
+    );
+  };
+
+  const handleLanguageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    if (socket.id != creator) return;
+
+    setGameSettings({
+      ...gameSettings,
+      language: event.target.value as Languages,
+    });
+    socket.emit(
+      GameEvent.CHANGE_SETTIING,
+      SettingValue.language,
+      event.target.value
+    );
   };
 
   const handleEnd = ({ time }: { time: number }) => {
@@ -138,94 +175,100 @@ const GameSettings: React.FC = () => {
     }, time * 1000);
   };
 
+  const settingsOptions = [
+    {
+      label: "Players",
+      value: gameSettings.players,
+      setter: handleNumPlayersChange,
+      icon: <Users size={18} />,
+      options: [...Array(7)].map((_, i) => {
+        return { value: i + 2, label: i + 2 };
+      }),
+    },
+    {
+      label: "Language",
+      value: gameSettings.language,
+      setter: handleLanguageChange,
+      icon: <Globe size={18} />,
+      options: Object.entries(Languages).map(([key, val]) => ({
+        value: val,
+        label: new Intl.DisplayNames(["en"], {
+          type: "language",
+        }).of(key.replace(/_/g, " ")),
+      })),
+    },
+    {
+      label: "Drawtime",
+      value: gameSettings.drawTime,
+      setter: handleDrawingTimeChange,
+      icon: <Clock size={18} />,
+      options: [...Array(23)].map((_, i) => {
+        return { value: i * 10 + 20, label: i * 10 + 20 };
+      }),
+    },
+    {
+      label: "Rounds",
+      value: gameSettings.rounds,
+      setter: handleRoundsChange,
+      icon: <RotateCw size={18} />,
+      options: [...Array(8)].map((_, i) => {
+        return { value: i + 1, label: i + 1 };
+      }),
+    },
+    // { label: "Game Mode", value: gameMode, setter: setGameMode, icon: <Gamepad2 size={18} />, options: ["Normal", "Hard"] },
+    {
+      label: "Word Count",
+      value: gameSettings.wordCount,
+      setter: handleWordsChange,
+      icon: <Gamepad2 size={18} />,
+      options: [...Array(5)].map((_, i) => {
+        return { value: i + 1, label: i + 1 };
+      }),
+    },
+    {
+      label: "Hints",
+      value: gameSettings.hints,
+      setter: handleHints,
+      icon: <Lightbulb size={18} />,
+      options: [...Array(3)].map((_, i) => {
+        return { value: i + 1, label: i + 1 };
+      }),
+    },
+  ];
+
   if (!isOpen) return null;
   return (
     <div className="w-full h-full p-2 sm:p-6">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <label
-            htmlFor="numPlayers"
-            className="block text-sm font-medium text-gray-200 mb-1"
-          >
-            Number of Players
-          </label>
-          <select
-            id="numPlayers"
-            value={gameSettings.players}
-            onChange={handleNumPlayersChange}
-            disabled={!isOwner}
-            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-          >
-            {[...Array(7)].map((_, i) => (
-              <option key={i + 2} value={i + 2}>
-                {i + 2}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex justify-between items-center">
-          <label
-            htmlFor="drawingTime"
-            className="block text-sm font-medium text-gray-200 mb-1"
-          >
-            Drawing Time (seconds)
-          </label>
-          <select
-            id="drawingTime"
-            value={gameSettings.drawTime}
-            onChange={handleDrawingTimeChange}
-            disabled={!isOwner}
-            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-          >
-            {[...Array(23)].map((_, i) => (
-              <option key={i * 10 + 20} value={i * 10 + 20}>
-                {i * 10 + 20}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex justify-between items-center">
-          <label
-            htmlFor="rounds"
-            className="block text-sm font-medium text-gray-200 mb-1"
-          >
-            Number of Rounds
-          </label>
-          <select
-            id="rounds"
-            value={gameSettings.rounds}
-            onChange={handleRoundsChange}
-            disabled={!isOwner}
-            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-          >
-            {[...Array(8)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex justify-between items-center">
-          <label
-            htmlFor="rounds"
-            className="block text-sm font-medium text-gray-200 mb-1"
-          >
-            Number of Words
-          </label>
-          <select
-            id="words"
-            value={gameSettings.wordCount}
-            onChange={handleWordsChange}
-            disabled={!isOwner}
-            className="w-1/2 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
-          >
-            {[...Array(8)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="sm:space-y-2 flex flex-col flex-wrap">
+        {settingsOptions.map((item, index) => {
+          return (
+            <div className="flex justify-between items-center" key={index}>
+              <label
+                htmlFor={item.label}
+                className="block text-sm font-medium text-gray-200 mb-1"
+              >
+                <div className="flex gap-2">
+                  {item.icon}
+                  {item.label}
+                </div>
+              </label>
+              <select
+                id={item.label}
+                value={item.value}
+                onChange={item.setter}
+                disabled={!isOwner}
+                className="w-1/2 p-1 sm:p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
+              >
+                {item.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })}
+
         <div className="flex justify-between items-center">
           <label
             htmlFor="custom-words"
@@ -257,10 +300,13 @@ const GameSettings: React.FC = () => {
           placeholder="Type words separated by commas, maximum 2000 characters"
           value={customWords}
           onChange={(e) => setCustomWords(e.target.value)}
+          disabled={!isOwner}
+          maxLength={2000}
+          rows={5}
         ></textarea>
         {/* <CustomWordsInput /> */}
       </div>
-      <div className="mt-6 flex gap-5 justify-end">
+      <div className="sm:mt-2 flex gap-5 justify-end">
         <Button
           onClick={handleStart}
           className="w-3/5"

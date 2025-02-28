@@ -71,7 +71,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       language: Languages.en,
     },
   });
-  const [myTurn, setIsmyTrun] = useState(true);
+  const [myTurn, setIsmyTrun] = useState(false);
   const [me, setMe] = useState<Player | null>(null);
   const [roomState, setRoomState] = useState<RoomState>(RoomState.NOT_STARTED);
 
@@ -139,7 +139,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   }
 
   function gameStarted(room: Room) {
-    setRoomState(RoomState.CHOOSING_WORD);
+    const cP = room.players[room.gameState.currentPlayer] || null;
+    if (cP && socket.id === cP.playerId) setIsmyTrun(true);
+    else setIsmyTrun(false);
     joinedRoom(room);
   }
 
