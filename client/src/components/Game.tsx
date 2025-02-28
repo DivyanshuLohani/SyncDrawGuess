@@ -9,13 +9,15 @@ import AudioManager from "./Audio/AudioManager";
 import GuessInput from "./GuessInput";
 import MessagesContext from "../context/MessagesContext";
 import ToastStack from "./Overlay/ToastMessage";
+import Logo from "./Logo";
 
 const Game = ({ room }: { room: Room }) => {
   const isMobile = useIsMobile();
 
   return (
     <MessagesContext>
-      <div className="flex flex-grow flex-col sm:flex-row justify-center w-full h-full">
+      <Logo />
+      <div className="flex flex-grow flex-col sm:flex-row justify-center w-full h-screen ">
         <AudioManager />
         <div className="flex-col">{!isMobile && <PlayerScores />}</div>
         <div>

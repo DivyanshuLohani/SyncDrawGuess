@@ -42,7 +42,7 @@ const PlayerScores: React.FC = () => {
   });
 
   return (
-    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-sm shadow-lg border-2 border-primary-400 h-full w-2/4 sm:w-[300px] overflow-x-hidden">
+    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-sm shadow-lg border-2 border-primary-400 w-2/4 sm:w-[300px] overflow-x-hidden  h-[400px] sm:h-[650px] ">
       {/* <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
         <Users className="mt-2" />
         <span>Players</span>

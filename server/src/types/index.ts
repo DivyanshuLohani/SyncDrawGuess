@@ -1,5 +1,3 @@
-import exp from "constants";
-
 export interface PlayerData {
   name: string;
   color: string;
@@ -18,6 +16,12 @@ export interface GameState {
   guessedWords: string[];
   word: string;
   currentPlayer: number;
+  hintLetters: GuessedLetters[];
+}
+
+export interface GuessedLetters {
+  index: number;
+  letter: string;
 }
 
 export interface Settings {
@@ -95,4 +99,5 @@ export enum GameEvent {
   GUESS_WORD_CHOSEN = "guessWordChosen",
   SETTINGS_CHANGED = "settingsChanged",
   GUESS_FAIL = "guessFail",
+  GUESS_HINT = "guessHint",
 }

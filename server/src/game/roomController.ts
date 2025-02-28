@@ -6,20 +6,20 @@ import { convertToUnderscores, getRandomWords } from "../utils/word";
 import { generateEmptyRoom } from "./gameController";
 import { getRoomFromSocket } from "./gameController";
 import {
+  BONUS_PER_GUESS,
+  DRAWER_POINTS,
   END_ROUND_TIME,
+  HINTS_TIME,
   WINNER_SHOW_TIME,
   WORDCHOOSE_TIME,
 } from "../constants";
 
-const DRAWER_POINTS = 50;
-const BONUS_PER_GUESS = 10;
 const timers = new Map();
 const hintTimers = new Map();
 
 function clearTimers(roomId: string) {
   const timer = timers.get(roomId);
   const hintTimer = hintTimers.get(roomId);
-  console.log(timer, hintTimer);
   if (timer) {
     clearTimeout(timer);
     timers.delete(roomId);
@@ -185,6 +185,13 @@ export async function wordSelected(roomId: string, word: string, io: Server) {
     await endRound(roomId, io, "Time is up");
   }, room.settings.drawTime * 1000);
   timers.set(roomId, timeOut);
+
+  if (room.settings.hints > 0) {
+    const hintsTimeout = setTimeout(async () => {
+      await sendHint(io, roomId);
+    }, room.settings.drawTime * 0.5 * 1000);
+    hintTimers.set(roomId, hintsTimeout);
+  }
 }
 
 export async function givePoints(roomId: string) {
@@ -334,3 +341,43 @@ export const handleSettingsChange = async (
   await setRedisRoom(room.roomId, room);
   io.to(room.roomId).emit(GameEvent.SETTINGS_CHANGED, setting, value);
 };
+
+export async function sendHint(io: Server, roomId: string) {
+  const room = await getRedisRoom(roomId);
+  if (!room) return;
+  const word = room.gameState.word;
+  if (!word) return;
+  if (room.gameState.hintLetters.length >= room.settings.hints) return;
+
+  if (hintTimers.get(roomId)) clearTimeout(hintTimers.get(roomId));
+
+  // Cannot make the whole word appear randomly
+  if (room.gameState.hintLetters.length - 1 >= word.length) return;
+
+  const revealedIndices = new Set<number>();
+
+  // Reveal some characters based on word length
+  while (revealedIndices.size < Math.ceil(word.length / 3)) {
+    const index = Math.floor(Math.random() * word.length);
+    revealedIndices.add(index);
+  }
+
+  // Create an array of revealed letters with indices
+  const hintArray = Array.from(revealedIndices).map((index) => ({
+    index,
+    letter: word[index],
+  }));
+  // Get a random element from the hint array
+  const randomIndex = Math.floor(Math.random() * hintArray.length);
+  const hint = hintArray[randomIndex];
+  room.gameState.hintLetters.push(hint);
+
+  // Emit hint to the room
+  io.to(roomId)
+    .except(room.players[room.gameState.currentPlayer].playerId)
+    .emit(GameEvent.GUESS_HINT, hint);
+
+  if (room.gameState.hintLetters.length !== room.settings.hints) {
+    hintTimers.set(roomId, setTimeout(sendHint, HINTS_TIME * 1000, io, roomId));
+  }
+}

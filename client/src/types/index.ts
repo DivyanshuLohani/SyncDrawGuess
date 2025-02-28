@@ -29,6 +29,7 @@ export enum GameEvent {
   GUESS_WORD_CHOSEN = "guessWordChosen",
   SETTINGS_CHANGED = "settingsChanged",
   GUESS_FAIL = "guessFail",
+  GUESS_HINT = "guessHint",
 }
 
 export interface PlayerData {

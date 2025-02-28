@@ -53,8 +53,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   handleUndo,
   handleClear,
 }) => {
-  const [primaryColor, setPrimaryColor] = useState<string>("#FFFFFF");
-  const [secondaryColor, setSecondaryColor] = useState<string>("#000000");
+  const [primaryColor, setPrimaryColor] = useState<string>("#000000");
+  const [secondaryColor, setSecondaryColor] = useState<string>("#FFFFFF");
 
   const [selectedLineWidth, setSelectedLineWidth] = useState<number>(5);
   const { myTurn, roomState } = useRoom();

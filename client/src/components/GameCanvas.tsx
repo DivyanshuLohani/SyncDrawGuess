@@ -137,6 +137,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
     <>
       <div id="game-canvas">
         <canvas
+          className="bg-white"
           ref={canvasRef}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onMouseDown={(e: any) => startDrawing(e)}

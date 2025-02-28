@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io";
+import { Socket } from "socket.io";
 import { setRedisRoom } from "../utils/redis";
 import { Languages, Player, PlayerData, Room, Settings } from "../types";
 import { getRedisRoom as gR } from "../utils/redis";
@@ -40,6 +40,7 @@ export async function generateEmptyRoom(
       guessedWords: [],
       word: "",
       currentPlayer: 0,
+      hintLetters: [],
     },
     settings: { ...defaultSettings, language },
     isPrivate,
@@ -67,7 +68,3 @@ const defaultSettings: Settings = {
   wordCount: 3,
   hints: 2,
 };
-
-export async function sendHint(io: Server, roomId: string) {
-  const room = await gR(roomId);
-}
