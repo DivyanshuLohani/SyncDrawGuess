@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 
 const GameSettings: React.FC = () => {
-  const { settings, creator, currentRound, changeSetting } = useRoom();
+  const { settings, creator, currentRound, changeSetting, isPrivateRoom } =
+    useRoom();
   const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
   // State for settings
   const [gameSettings, setGameSettings] = useState<Settings>(settings);
@@ -237,6 +238,16 @@ const GameSettings: React.FC = () => {
   ];
 
   if (!isOpen) return null;
+  if (!isPrivateRoom)
+    return (
+      <div className="w-full h-full p-2 sm:p-6 text-white justify-center flex-col flex items-center text-2xl sm:text-5xl gap-5">
+        Waiting for players
+        <span className="text-base sm:text-xl">
+          The game will start as soon as a player joins
+        </span>
+      </div>
+    );
+
   return (
     <div className="w-full h-full p-2 sm:p-6">
       <div className="sm:space-y-2 flex flex-col flex-wrap">

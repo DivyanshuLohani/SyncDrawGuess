@@ -20,7 +20,7 @@ import { socket } from "../socketHandler";
 interface RoomContextValue {
   roomId: string;
   players: Player[];
-  creator: string;
+  creator: string | null;
   currentPlayer: Player | null;
   currentRound: number;
   drawingData: DrawData[];
@@ -32,6 +32,7 @@ interface RoomContextValue {
   myTurn: boolean;
   me: Player | null;
   roomState: RoomState;
+  isPrivateRoom: boolean;
 }
 const RoomContext = createContext<RoomContextValue | undefined>(undefined);
 
@@ -70,6 +71,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       hints: 0,
       language: Languages.en,
     },
+    isPrivate: false,
   });
   const [myTurn, setIsmyTrun] = useState(false);
   const [me, setMe] = useState<Player | null>(null);
@@ -197,6 +199,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     myTurn,
     me,
     roomState: roomState,
+    isPrivateRoom: room.isPrivate,
   };
 
   return (

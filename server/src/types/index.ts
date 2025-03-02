@@ -3,6 +3,18 @@ export interface PlayerData {
   color: string;
 }
 
+export type EndTurnData = {
+  word: string;
+  reason: RounEndReason;
+  time: number;
+};
+
+export enum RounEndReason {
+  ALL_GUESSED = 1,
+  TIMEUP,
+  LEFT,
+}
+
 export interface Player extends PlayerData {
   playerId: string;
   score: number;
@@ -48,7 +60,7 @@ export enum SettingValue {
 
 export interface Room {
   roomId: string; // Unique identifier for the room
-  creator: string; // Player ID of the creator of the room
+  creator: string | null; // Player ID of the creator of the room
   players: Player[]; // List of players in the room
   gameState: GameState; // Current state of the game
   settings: Settings;

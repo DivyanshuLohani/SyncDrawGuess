@@ -76,7 +76,7 @@ const GameHeader = () => {
   });
 
   function renderWord() {
-    if (typeof word === "string") return word; // Show full word for drawer
+    if (typeof word === "string") return <span>{word}</span>; // Show full word for drawer
 
     let wordIndex = 0;
     return word.map((length, wordPartIndex) => {

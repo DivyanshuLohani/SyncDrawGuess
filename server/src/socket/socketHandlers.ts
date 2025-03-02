@@ -17,6 +17,7 @@ import {
   endRound,
   guessWord,
   handleDrawAction,
+  handleNewPlayerJoin,
   handleNewRoom,
   handlePlayerLeft,
   handleSettingsChange,
@@ -39,31 +40,7 @@ export function setupSocket(io: Server) {
           return await handleNewRoom(io, socket, playerData, isPrivate);
         }
 
-        const room = await gR(roomId);
-        if (!room) {
-          socket.emit("error", "Invalid Room ID");
-          return socket.disconnect();
-        }
-
-        if (room.players.length >= room.settings.players) {
-          socket.emit("error", "The room you're trying to join is full");
-          return socket.disconnect();
-        }
-
-        const player: Player = {
-          ...playerData,
-          score: 0,
-          playerId: socket.id,
-          guessed: false,
-          guessedAt: null,
-        };
-
-        room.players.push(player);
-        await setRedisRoom(roomId, room);
-
-        socket.join(roomId);
-        socket.emit(GameEvent.JOINED_ROOM, room);
-        io.to(room.roomId).emit(GameEvent.PLAYER_JOINED, player);
+        await handleNewPlayerJoin(roomId, socket, io, playerData);
       }
     );
 

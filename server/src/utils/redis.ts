@@ -1,6 +1,6 @@
 import * as redis from "redis";
 import { promisify } from "util";
-import { Room } from "../types";
+import { Languages, Room } from "../types";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -38,6 +38,27 @@ export async function setRedisRoom(roomId: string, roomData: Room) {
 
 export async function deleteRedisRoom(roomId: string) {
   await client.del(`${ROOM_PREFIX}${roomId}`);
+}
+
+export async function getPublicRoom(
+  language: Languages = Languages.en
+): Promise<Room | null> {
+  const rooms = await getPublicRooms();
+  if (rooms.length <= 0) {
+    return null;
+  }
+
+  for (const roomId of rooms) {
+    const room = await getRedisRoom(roomId);
+    if (!room) continue;
+    if (
+      room.players.length < room.settings.players &&
+      room.settings.language === language
+    ) {
+      return room;
+    }
+  }
+  return null;
 }
 
 export async function getPublicRooms() {

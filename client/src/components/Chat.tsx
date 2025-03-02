@@ -36,7 +36,7 @@ const Chat = () => {
   }, [messages]);
 
   return (
-    <div className="bg-gradient-to-br from-primary-100 to-secondary-100 w-1/2 sm:w-auto ">
+    <div className="h-[400px] sm:h-[650px] bg-gradient-to-br from-primary-100 to-secondary-100 w-1/2 sm:w-auto ">
       {/* <h2 className="text-lg sm:text-2xl font-bold mb-4 text-primary-700 flex items-center gap-3 p-2">
         <MessageSquareMoreIcon className="mt-2" />
         <span>Chat</span>
@@ -44,7 +44,7 @@ const Chat = () => {
 
       <div
         className={clsx(
-          "h-[400px] sm:h-[599px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth",
+          "h-[400px] sm:h-[600px] overflow-y-auto sm:p-4 bg-background rounded-lg border-2 border-dashed border-primary-300 transition-colors duration-200 scroll-smooth",
           {
             "sm:h-[715px]": myTurn,
           }

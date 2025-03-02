@@ -1,7 +1,12 @@
 import { Server, Socket } from "socket.io";
-import { PlayerData, Room, Settings } from "../types";
-import { deleteRedisRoom, getRedisRoom, setRedisRoom } from "../utils/redis";
-import { GameEvent } from "../types";
+import { Player, PlayerData, Room, Settings } from "../types";
+import {
+  deleteRedisRoom,
+  getPublicRoom,
+  getRedisRoom,
+  setRedisRoom,
+} from "../utils/redis";
+import { GameEvent, RounEndReason } from "../types";
 import { convertToUnderscores, getRandomWords } from "../utils/word";
 import { generateEmptyRoom } from "./gameController";
 import { getRoomFromSocket } from "./gameController";
@@ -16,6 +21,9 @@ import {
 
 const timers = new Map();
 const hintTimers = new Map();
+
+// This is for new game on public rooms
+const startGameTimers = new Map();
 
 function clearTimers(roomId: string) {
   const timer = timers.get(roomId);
@@ -43,15 +51,16 @@ export async function startGame(room: Room, io: Server) {
 export async function endRound(
   roomId: string,
   io: Server,
-  reason: string = ""
+  reason: RounEndReason = RounEndReason.TIMEUP
 ) {
   let room = await getRedisRoom(roomId);
   if (!room) return;
 
   clearTimers(room.roomId);
-  if (reason === "left" && room.players.length === 2) {
+  if (reason === RounEndReason.LEFT && room.players.length === 2) {
     return;
   }
+
   room.gameState.currentPlayer += 1;
 
   // Check if playerCounter needs to be incremented
@@ -119,7 +128,7 @@ export async function guessWord(
         (p) => p.guessed || p.playerId === currentPlayer.playerId
       )
     ) {
-      await endRound(room.roomId, io, "All players have guessed the word");
+      await endRound(room.roomId, io, RounEndReason.ALL_GUESSED);
     }
   } else {
     io.to(room.roomId).emit(GameEvent.GUESS, guess, player);
@@ -129,9 +138,10 @@ export async function guessWord(
 export async function nextRound(roomId: string, io: Server) {
   const room = await getRedisRoom(roomId);
   if (!room) return;
+
   // Set the current player
   const currentPlayer = room.players[room.gameState.currentPlayer];
-  if (!currentPlayer) throw new Error("Player not found"); // this line is never possible
+  if (!currentPlayer) throw new Error("Player not found");
 
   // Get random words
   const words = await getRandomWords(
@@ -140,11 +150,14 @@ export async function nextRound(roomId: string, io: Server) {
     room.settings.onlyCustomWords,
     room.settings.customWords
   );
+
+  // Send words to current player
   io.to(currentPlayer.playerId).emit(GameEvent.CHOOSE_WORD, {
     words,
     time: WORDCHOOSE_TIME,
   });
 
+  // Send choosing word event to other players in the room
   io.to(room.roomId)
     .except(currentPlayer.playerId)
     .emit(GameEvent.CHOOSING_WORD, { currentPlayer, time: WORDCHOOSE_TIME });
@@ -164,17 +177,20 @@ export async function wordSelected(roomId: string, word: string, io: Server) {
   const room = await getRedisRoom(roomId);
   if (!room) return;
   clearTimers(room.roomId);
+
   room.gameState.word = word;
   await setRedisRoom(roomId, room);
 
   const player = room.players[room.gameState.currentPlayer];
   if (!player) return;
 
+  // Send the selected word to the drawer
   io.to(player.playerId).emit(GameEvent.WORD_CHOSEN, {
     word,
     time: room.settings.drawTime,
   });
 
+  // convert the word into array of letter lengths
   const words_lens = convertToUnderscores(word);
   io.to(room.roomId).except(player.playerId).emit(GameEvent.GUESS_WORD_CHOSEN, {
     word: words_lens,
@@ -182,7 +198,7 @@ export async function wordSelected(roomId: string, word: string, io: Server) {
   });
 
   const timeOut = setTimeout(async () => {
-    await endRound(roomId, io, "Time is up");
+    await endRound(roomId, io, RounEndReason.TIMEUP);
   }, room.settings.drawTime * 1000);
   timers.set(roomId, timeOut);
 
@@ -233,6 +249,13 @@ export async function endGame(roomId: string, io: Server) {
   room.gameState.guessedWords = [];
   await setRedisRoom(roomId, room);
   io.to(roomId).emit(GameEvent.GAME_ENDED, { room, time: WINNER_SHOW_TIME });
+
+  if (!room.isPrivate) {
+    const timeOut = setTimeout(async () => {
+      await startGame(room, io);
+    }, WINNER_SHOW_TIME * 1000);
+    startGameTimers.set(roomId, timeOut);
+  }
 }
 
 export const handleNewRoom = async (
@@ -241,15 +264,19 @@ export const handleNewRoom = async (
   playerData: PlayerData,
   isPrivate?: boolean
 ) => {
+  let roomId;
   if (isPrivate) {
-    const newRoomId = await generateEmptyRoom(socket, playerData, isPrivate);
-    socket.join(newRoomId);
-    const room = await getRedisRoom(newRoomId);
-    io.to(newRoomId).emit(GameEvent.JOINED_ROOM, room);
+    roomId = await generateEmptyRoom(socket, isPrivate);
   } else {
-    // TODO: Implement public room search logic or create a new one
-    console.log("Public room request");
+    const room = await getPublicRoom();
+    if (!room) {
+      roomId = await generateEmptyRoom(socket, false);
+    } else {
+      roomId = room.roomId;
+    }
   }
+
+  handleNewPlayerJoin(roomId, socket, io, playerData);
 };
 
 export async function handleDrawAction(
@@ -290,7 +317,7 @@ export const handlePlayerLeft = async (socket: Socket, io: Server) => {
 
   const currentPlayer = room.players[room.gameState.currentPlayer];
   if (currentPlayer && currentPlayer.playerId === socket.id) {
-    await endRound(room.roomId, io, "left");
+    await endRound(room.roomId, io, RounEndReason.LEFT);
   }
 
   const player = room.players.find((e) => e.playerId === socket.id);
@@ -314,6 +341,14 @@ export const handlePlayerLeft = async (socket: Socket, io: Server) => {
   if (room.players.length === 1 && room.gameState.currentRound >= 1) {
     // No players left in the room
     await endGame(room.roomId, io);
+
+    // not 2 players present so game will not start
+    if (!room.isPrivate) {
+      if (startGameTimers.has(room.roomId)) {
+        clearTimeout(startGameTimers.get(room.roomId));
+        startGameTimers.delete(room.roomId);
+      }
+    }
   }
 };
 
@@ -379,5 +414,48 @@ export async function sendHint(io: Server, roomId: string) {
 
   if (room.gameState.hintLetters.length !== room.settings.hints) {
     hintTimers.set(roomId, setTimeout(sendHint, HINTS_TIME * 1000, io, roomId));
+  }
+}
+
+export async function handleNewPlayerJoin(
+  roomId: string,
+  socket: Socket,
+  io: Server,
+  playerData: PlayerData
+) {
+  const room = await getRedisRoom(roomId);
+  if (!room) {
+    socket.emit("error", "Invalid Room ID");
+    return socket.disconnect();
+  }
+
+  if (room.players.length >= room.settings.players) {
+    socket.emit("error", "The room you're trying to join is full");
+    return socket.disconnect();
+  }
+
+  const player: Player = {
+    ...playerData,
+    score: 0,
+    playerId: socket.id,
+    guessed: false,
+    guessedAt: null,
+  };
+
+  room.players.push(player);
+
+  await setRedisRoom(roomId, room);
+
+  socket.join(roomId);
+  socket.emit(GameEvent.JOINED_ROOM, room);
+  io.to(room.roomId).emit(GameEvent.PLAYER_JOINED, player);
+
+  if (
+    !room.isPrivate &&
+    room.players.length >= 2 &&
+    !startGameTimers.has(roomId) &&
+    room.gameState.currentRound === 0
+  ) {
+    await startGame(room, io);
   }
 }
