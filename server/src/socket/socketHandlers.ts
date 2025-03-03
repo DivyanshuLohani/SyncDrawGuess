@@ -7,6 +7,7 @@ import {
 import { getRoomFromSocket } from "../game/gameController";
 import {
   GameEvent,
+  Languages,
   Player,
   PlayerData,
   Settings,
@@ -30,17 +31,28 @@ export function setupSocket(io: Server) {
     console.log("A user connected:", socket.id);
     socket.on(
       GameEvent.JOIN_ROOM,
-      async (playerData: PlayerData, roomId?: string, isPrivate?: boolean) => {
+      async (
+        playerData: PlayerData,
+        language: Languages = Languages.en,
+        roomId?: string,
+        isPrivate?: boolean
+      ) => {
         if (!playerData) {
           socket.emit("error", "playerData is required");
           return socket.disconnect();
         }
 
         if (!roomId) {
-          return await handleNewRoom(io, socket, playerData, isPrivate);
+          return await handleNewRoom(
+            io,
+            socket,
+            playerData,
+            language,
+            isPrivate
+          );
         }
 
-        await handleNewPlayerJoin(roomId, socket, io, playerData);
+        await handleNewPlayerJoin(roomId, socket, io, playerData, language);
       }
     );
 

@@ -1,6 +1,12 @@
+export enum PlayerAppearance {
+  BODY = 0,
+  EYES,
+  MOUTH,
+}
+
 export interface PlayerData {
   name: string;
-  color: string;
+  appearance: [number, number, number];
 }
 
 export type EndTurnData = {

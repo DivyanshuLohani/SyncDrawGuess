@@ -37,6 +37,8 @@ export async function setRedisRoom(roomId: string, roomData: Room) {
 }
 
 export async function deleteRedisRoom(roomId: string) {
+  console.log("Deleting room:", roomId);
+  await client.del(`${PUBLIC_ROOM_PREFIX}${roomId}`);
   await client.del(`${ROOM_PREFIX}${roomId}`);
 }
 
@@ -65,4 +67,14 @@ export async function getPublicRooms() {
   let data = await client.keys(`${PUBLIC_ROOM_PREFIX}*`);
   if (!data) return [];
   return data.map((e) => e.replace(PUBLIC_ROOM_PREFIX, ""));
+}
+
+export async function deletePublicRooms() {
+  const publicRooms = await client.keys(`${PUBLIC_ROOM_PREFIX}*`);
+  if (publicRooms.length > 0) {
+    await client.del([...publicRooms]);
+    console.log(`Deleted ${publicRooms.length} public rooms`);
+  } else {
+    console.log("No public rooms to delete");
+  }
 }

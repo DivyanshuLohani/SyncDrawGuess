@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { Player, PlayerData, Room, Settings } from "../types";
+import { Languages, Player, PlayerData, Room, Settings } from "../types";
 import {
   deleteRedisRoom,
   getPublicRoom,
@@ -141,7 +141,7 @@ export async function nextRound(roomId: string, io: Server) {
 
   // Set the current player
   const currentPlayer = room.players[room.gameState.currentPlayer];
-  if (!currentPlayer) throw new Error("Player not found");
+  if (!currentPlayer) return;
 
   // Get random words
   const words = await getRandomWords(
@@ -262,21 +262,22 @@ export const handleNewRoom = async (
   io: Server,
   socket: Socket,
   playerData: PlayerData,
+  language: Languages,
   isPrivate?: boolean
 ) => {
   let roomId;
   if (isPrivate) {
-    roomId = await generateEmptyRoom(socket, isPrivate);
+    roomId = await generateEmptyRoom(socket, isPrivate, language);
   } else {
-    const room = await getPublicRoom();
+    const room = await getPublicRoom(language);
     if (!room) {
-      roomId = await generateEmptyRoom(socket, false);
+      roomId = await generateEmptyRoom(socket, false, language);
     } else {
       roomId = room.roomId;
     }
   }
 
-  handleNewPlayerJoin(roomId, socket, io, playerData);
+  handleNewPlayerJoin(roomId, socket, io, playerData, language);
 };
 
 export async function handleDrawAction(
@@ -350,6 +351,15 @@ export const handlePlayerLeft = async (socket: Socket, io: Server) => {
       }
     }
   }
+
+  if (room.players.length <= 0) {
+    await deleteRedisRoom(room.roomId);
+    clearTimers(room.roomId);
+    if (startGameTimers.has(room.roomId)) {
+      clearTimeout(startGameTimers.get(room.roomId));
+      startGameTimers.delete(room.roomId);
+    }
+  }
 };
 
 export const handleSettingsChange = async (
@@ -421,12 +431,12 @@ export async function handleNewPlayerJoin(
   roomId: string,
   socket: Socket,
   io: Server,
-  playerData: PlayerData
+  playerData: PlayerData,
+  language: Languages
 ) {
   const room = await getRedisRoom(roomId);
   if (!room) {
-    socket.emit("error", "Invalid Room ID");
-    return socket.disconnect();
+    return handleNewRoom(io, socket, playerData, language, false);
   }
 
   if (room.players.length >= room.settings.players) {

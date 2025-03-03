@@ -14,123 +14,61 @@ import {
 } from "lucide-react";
 
 const GameSettings: React.FC = () => {
-  const { settings, creator, currentRound, changeSetting, isPrivateRoom } =
-    useRoom();
-  const [isOpen, setIsOpen] = useState<boolean>(currentRound === 0);
+  const { settings, creator, changeSetting, isPrivateRoom } = useRoom();
+
   // State for settings
   const [gameSettings, setGameSettings] = useState<Settings>(settings);
   const [customWords, setCustomWords] = useState<string>(
     settings.customWords.join(",")
   );
 
-  useEffect(() => {
-    function handleSettingChange(setting: SettingValue, value: number) {
-      changeSetting(setting, value.toString());
-      switch (setting) {
-        case SettingValue.players:
-          setGameSettings({ ...gameSettings, players: value });
-          break;
-        case SettingValue.drawTime:
-          setGameSettings({ ...gameSettings, drawTime: value });
-          break;
-        case SettingValue.rounds:
-          setGameSettings({ ...gameSettings, rounds: value });
-          break;
-        case SettingValue.wordCount:
-          setGameSettings({ ...gameSettings, wordCount: value });
-          break;
-        default:
-          break;
-      }
+  function handleSettingChange(
+    setting: SettingValue,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+    emitEvent: boolean = true
+  ) {
+    changeSetting(setting, value.toString());
+    switch (setting) {
+      case SettingValue.players:
+        setGameSettings({ ...gameSettings, players: value });
+        break;
+      case SettingValue.drawTime:
+        setGameSettings({ ...gameSettings, drawTime: value });
+        break;
+      case SettingValue.rounds:
+        setGameSettings({ ...gameSettings, rounds: value });
+        break;
+      case SettingValue.wordCount:
+        setGameSettings({ ...gameSettings, wordCount: value });
+        break;
+      case SettingValue.hints:
+        setGameSettings({ ...gameSettings, hints: value });
+        break;
+      case SettingValue.language:
+        setGameSettings({ ...gameSettings, language: value as Languages });
+        break;
+      case SettingValue.onlyCustomWords:
+        setGameSettings({ ...gameSettings, onlyCustomWords: value === 1 });
+        break;
+
+      default:
+        break;
     }
+
+    if (emitEvent && isOwner) {
+      socket.emit(GameEvent.CHANGE_SETTIING, setting, value);
+    }
+  }
+
+  useEffect(() => {
     socket.on(GameEvent.SETTINGS_CHANGED, handleSettingChange);
-    socket.on(GameEvent.GAME_STARTED, onClose);
-    socket.on(GameEvent.GAME_ENDED, handleEnd);
 
     return () => {
       socket.off(GameEvent.SETTINGS_CHANGED, handleSettingChange);
-      socket.off(GameEvent.GAME_STARTED, onClose);
-      socket.off(GameEvent.GAME_ENDED, handleEnd);
     };
   });
 
-  function onClose() {
-    setIsOpen(false);
-  }
-
-  // Handlers
-  const handleNumPlayersChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      players: parseInt(event.target.value, 10),
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.players,
-      parseInt(event.target.value, 10)
-    );
-  };
-
-  const handleDrawingTimeChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      drawTime: parseInt(event.target.value, 10),
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.drawTime,
-      parseInt(event.target.value, 10)
-    );
-  };
-
-  const handleRoundsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      rounds: parseInt(event.target.value, 10),
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.rounds,
-      parseInt(event.target.value)
-    );
-  };
-
-  const handleWordsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      wordCount: parseInt(event.target.value, 10),
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.wordCount,
-      parseInt(event.target.value)
-    );
-  };
-  const handleCustomWordsOnly = () => {
-    if (socket.id != creator) return;
-    const customWordsOnly = !gameSettings.onlyCustomWords;
-    setGameSettings({
-      ...gameSettings,
-      onlyCustomWords: !gameSettings.onlyCustomWords,
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.onlyCustomWords,
-      customWordsOnly
-    );
-  };
   const isOwner = creator === socket.id;
 
   const handleStart = () => {
@@ -140,47 +78,11 @@ const GameSettings: React.FC = () => {
     });
   };
 
-  const handleHints = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      hints: parseInt(event.target.value, 10),
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.hints,
-      parseInt(event.target.value)
-    );
-  };
-
-  const handleLanguageChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    if (socket.id != creator) return;
-
-    setGameSettings({
-      ...gameSettings,
-      language: event.target.value as Languages,
-    });
-    socket.emit(
-      GameEvent.CHANGE_SETTIING,
-      SettingValue.language,
-      event.target.value
-    );
-  };
-
-  const handleEnd = ({ time }: { time: number }) => {
-    setTimeout(() => {
-      setIsOpen(true);
-    }, time * 1000);
-  };
-
   const settingsOptions = [
     {
       label: "Players",
       value: gameSettings.players,
-      setter: handleNumPlayersChange,
+      type: SettingValue.players,
       icon: <Users size={18} />,
       options: [...Array(7)].map((_, i) => {
         return { value: i + 2, label: i + 2 };
@@ -189,7 +91,7 @@ const GameSettings: React.FC = () => {
     {
       label: "Language",
       value: gameSettings.language,
-      setter: handleLanguageChange,
+      type: SettingValue.language,
       icon: <Globe size={18} />,
       options: Object.entries(Languages).map(([key, val]) => ({
         value: val,
@@ -201,7 +103,7 @@ const GameSettings: React.FC = () => {
     {
       label: "Drawtime",
       value: gameSettings.drawTime,
-      setter: handleDrawingTimeChange,
+      type: SettingValue.drawTime,
       icon: <Clock size={18} />,
       options: [...Array(23)].map((_, i) => {
         return { value: i * 10 + 20, label: i * 10 + 20 };
@@ -210,7 +112,7 @@ const GameSettings: React.FC = () => {
     {
       label: "Rounds",
       value: gameSettings.rounds,
-      setter: handleRoundsChange,
+      type: SettingValue.rounds,
       icon: <RotateCw size={18} />,
       options: [...Array(8)].map((_, i) => {
         return { value: i + 1, label: i + 1 };
@@ -220,7 +122,7 @@ const GameSettings: React.FC = () => {
     {
       label: "Word Count",
       value: gameSettings.wordCount,
-      setter: handleWordsChange,
+      type: SettingValue.wordCount,
       icon: <Gamepad2 size={18} />,
       options: [...Array(5)].map((_, i) => {
         return { value: i + 1, label: i + 1 };
@@ -229,7 +131,7 @@ const GameSettings: React.FC = () => {
     {
       label: "Hints",
       value: gameSettings.hints,
-      setter: handleHints,
+      type: SettingValue.hints,
       icon: <Lightbulb size={18} />,
       options: [...Array(3)].map((_, i) => {
         return { value: i + 1, label: i + 1 };
@@ -237,7 +139,6 @@ const GameSettings: React.FC = () => {
     },
   ];
 
-  if (!isOpen) return null;
   if (!isPrivateRoom)
     return (
       <div className="w-full h-full p-2 sm:p-6 text-white justify-center flex-col flex items-center text-2xl sm:text-5xl gap-5">
@@ -266,7 +167,9 @@ const GameSettings: React.FC = () => {
               <select
                 id={item.label}
                 value={item.value}
-                onChange={item.setter}
+                onChange={(event) =>
+                  handleSettingChange(item.type, event.target.value, true)
+                }
                 disabled={!isOwner}
                 className="w-1/2 p-1 sm:p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
               >
@@ -300,7 +203,13 @@ const GameSettings: React.FC = () => {
               className="ml-1 p-2 border border-gray-300 rounded-md disabled:hover:cursor-not-allowed hover:cursor-pointer"
               disabled={!isOwner}
               checked={gameSettings.onlyCustomWords}
-              onChange={handleCustomWordsOnly}
+              onChange={() =>
+                handleSettingChange(
+                  SettingValue.onlyCustomWords,
+                  !gameSettings.onlyCustomWords,
+                  true
+                )
+              }
             />
           </div>
         </div>

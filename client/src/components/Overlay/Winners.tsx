@@ -18,7 +18,7 @@ export default function Winners() {
               <div className="flex items-center space-x-2">
                 <span
                   className="block w-4 h-4 rounded-full"
-                  style={{ backgroundColor: player.color }}
+                  // style={{ backgroundColor: player.color }}
                 ></span>
                 <span className="font-semibold">{player.name}</span>
               </div>

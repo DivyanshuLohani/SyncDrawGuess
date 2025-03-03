@@ -32,9 +32,14 @@ export enum GameEvent {
   GUESS_HINT = "guessHint",
 }
 
+export enum PlayerAppearance {
+  BODY = 0,
+  EYES,
+  MOUTH,
+}
 export interface PlayerData {
   name: string;
-  color: string;
+  appearance: [number, number, number];
 }
 
 export interface Player extends PlayerData {
