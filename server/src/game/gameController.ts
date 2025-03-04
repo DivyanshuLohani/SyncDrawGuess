@@ -1,6 +1,13 @@
 import { Socket } from "socket.io";
 import { setRedisRoom } from "../utils/redis";
-import { Languages, Player, PlayerData, Room, Settings } from "../types";
+import {
+  Languages,
+  Player,
+  PlayerData,
+  Room,
+  RoomState,
+  Settings,
+} from "../types";
 import { getRedisRoom as gR } from "../utils/redis";
 import { DEFAULT_GAME_SETTINGS } from "../constants";
 
@@ -34,6 +41,7 @@ export async function generateEmptyRoom(
       word: "",
       currentPlayer: 0,
       hintLetters: [],
+      roomState: RoomState.NOT_STARTED,
     },
     settings: { ...DEFAULT_GAME_SETTINGS, language },
     isPrivate,

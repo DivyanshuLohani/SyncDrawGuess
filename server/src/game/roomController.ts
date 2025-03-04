@@ -1,5 +1,12 @@
 import { Server, Socket } from "socket.io";
-import { Languages, Player, PlayerData, Room, Settings } from "../types";
+import {
+  Languages,
+  Player,
+  PlayerData,
+  Room,
+  RoomState,
+  Settings,
+} from "../types";
 import {
   deleteRedisRoom,
   getPublicRoom,
@@ -42,7 +49,11 @@ export async function startGame(room: Room, io: Server) {
   clearTimers(room.roomId);
   room.gameState.currentRound = 1;
   room.gameState.currentPlayer = 0;
-  await setRedisRoom(room.roomId, room);
+  room.gameState.guessedWords = [];
+  room.gameState.drawingData = [];
+  room.gameState.hintLetters = [];
+  (room.gameState.roomState = RoomState.CHOOSING_WORD),
+    await setRedisRoom(room.roomId, room);
   io.to(room.roomId).emit(GameEvent.GAME_STARTED, room);
   await nextRound(room.roomId, io);
   return room;
@@ -86,6 +97,7 @@ export async function endRound(
     time: END_ROUND_TIME,
   });
   room.gameState.word = "";
+  room.gameState.roomState = RoomState.CHOOSING_WORD;
   await setRedisRoom(roomId, room);
 
   setTimeout(async () => {
@@ -162,6 +174,9 @@ export async function nextRound(roomId: string, io: Server) {
     .except(currentPlayer.playerId)
     .emit(GameEvent.CHOOSING_WORD, { currentPlayer, time: WORDCHOOSE_TIME });
 
+  room.gameState.timerStartedAt = new Date();
+  await setRedisRoom(room.roomId, room);
+
   const timeOut = setTimeout(async () => {
     const room = await getRedisRoom(roomId);
     if (!room) return;
@@ -179,6 +194,10 @@ export async function wordSelected(roomId: string, word: string, io: Server) {
   clearTimers(room.roomId);
 
   room.gameState.word = word;
+  room.gameState.roomState = RoomState.DRAWING;
+  room.gameState.timerStartedAt = new Date();
+  await setRedisRoom(room.roomId, room);
+
   await setRedisRoom(roomId, room);
 
   const player = room.players[room.gameState.currentPlayer];
@@ -247,6 +266,7 @@ export async function endGame(roomId: string, io: Server) {
   room.gameState.currentRound = 0;
   room.gameState.word = "";
   room.gameState.guessedWords = [];
+  room.gameState.roomState = RoomState.NOT_STARTED;
   await setRedisRoom(roomId, room);
   io.to(roomId).emit(GameEvent.GAME_ENDED, { room, time: WINNER_SHOW_TIME });
 
@@ -468,4 +488,38 @@ export async function handleNewPlayerJoin(
   ) {
     await startGame(room, io);
   }
+
+  if (room.gameState.roomState != RoomState.NOT_STARTED) {
+    handleInBetweenJoin(roomId, socket, io);
+  }
+}
+
+export async function handleInBetweenJoin(
+  roomId: string,
+  socket: Socket,
+  io: Server
+) {
+  const room = await getRedisRoom(roomId);
+  if (!room) return;
+  socket.join(roomId);
+
+  // subtract now from timerStartedAt
+  const now = new Date();
+  const timeElapsed =
+    now.getTime() - new Date(room.gameState.timerStartedAt).getTime();
+  const timeLeft =
+    (room.gameState.roomState === RoomState.CHOOSING_WORD
+      ? WORDCHOOSE_TIME
+      : room.settings.drawTime) *
+      1000 -
+    timeElapsed;
+  if (timeLeft < 0) return;
+  const time = Math.round(timeLeft / 1000);
+
+  const gameStateWithoutWord = {
+    ...room.gameState,
+    word: convertToUnderscores(room.gameState.word),
+    time,
+  };
+  socket.emit(GameEvent.GAME_STATE, { gameState: gameStateWithoutWord });
 }

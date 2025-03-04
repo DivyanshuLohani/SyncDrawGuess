@@ -8,6 +8,7 @@ import React, {
 import {
   DrawData,
   GameEvent,
+  GameState,
   Languages,
   Player,
   Room,
@@ -60,6 +61,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       guessedWords: [],
       word: "",
       currentPlayer: 0,
+      roomState: RoomState.NOT_STARTED,
+      timerStartedAt: new Date(),
+      hintLetters: [],
     },
     settings: {
       players: 0,
@@ -76,10 +80,6 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [myTurn, setIsmyTrun] = useState(false);
   const [me, setMe] = useState<Player | null>(null);
   const [roomState, setRoomState] = useState<RoomState>(RoomState.NOT_STARTED);
-
-  useEffect(() => {
-    console.log(roomState);
-  }, [roomState]);
 
   useEffect(() => {
     console.log(myTurn);
@@ -155,6 +155,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     joinedRoom(room);
   }
 
+  function updateGameState({ gameState }: { gameState: GameState }) {
+    setRoom((p) => {
+      return { ...p, gameState };
+    });
+    setRoomState(gameState.roomState);
+  }
+
   useEffect(() => {
     socket.on(GameEvent.JOINED_ROOM, joinedRoom);
     socket.on(GameEvent.WORD_CHOSEN, wordChosen);
@@ -166,6 +173,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     socket.on(GameEvent.CHOOSE_WORD, choseWord);
     socket.on(GameEvent.GUESS_WORD_CHOSEN, wordChosen);
     socket.on(GameEvent.CHOOSING_WORD, choosingWord);
+    socket.on(GameEvent.GAME_STATE, updateGameState);
 
     return () => {
       socket.off(GameEvent.JOINED_ROOM, joinedRoom);
@@ -178,6 +186,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       socket.off(GameEvent.GUESS_WORD_CHOSEN, wordChosen);
       socket.off(GameEvent.CHOOSE_WORD, choseWord);
       socket.off(GameEvent.CHOOSING_WORD, choosingWord);
+      socket.off(GameEvent.GAME_STATE, updateGameState);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

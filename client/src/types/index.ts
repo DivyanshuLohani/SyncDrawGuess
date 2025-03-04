@@ -30,6 +30,7 @@ export enum GameEvent {
   SETTINGS_CHANGED = "settingsChanged",
   GUESS_FAIL = "guessFail",
   GUESS_HINT = "guessHint",
+  GAME_STATE = "gameState",
 }
 
 export enum PlayerAppearance {
@@ -56,12 +57,20 @@ export interface DrawData {
   lineWidth: number;
   end: boolean;
 }
+
+export interface GuessedLetters {
+  index: number;
+  letter: string;
+}
 export interface GameState {
   currentRound: number;
   drawingData: DrawData[];
   guessedWords: string[];
   word: string;
   currentPlayer: number;
+  hintLetters: GuessedLetters[];
+  roomState: RoomState;
+  timerStartedAt: Date;
 }
 
 export interface Settings {

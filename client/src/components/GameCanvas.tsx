@@ -69,6 +69,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
   }
 
   function stopDrawing() {
+    if (!drawing) return;
     drawing = false;
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) ctx.beginPath();

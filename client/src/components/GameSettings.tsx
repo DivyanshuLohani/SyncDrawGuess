@@ -26,7 +26,7 @@ const GameSettings: React.FC = () => {
     setting: SettingValue,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
-    emitEvent: boolean = true
+    emitEvent: boolean = false
   ) {
     changeSetting(setting, value.toString());
     switch (setting) {
@@ -94,10 +94,8 @@ const GameSettings: React.FC = () => {
       type: SettingValue.language,
       icon: <Globe size={18} />,
       options: Object.entries(Languages).map(([key, val]) => ({
-        value: val,
-        label: new Intl.DisplayNames(["en"], {
-          type: "language",
-        }).of(key.replace(/_/g, " ")),
+        value: key,
+        label: val,
       })),
     },
     {

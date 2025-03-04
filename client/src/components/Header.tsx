@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { EndTurnData, GameEvent, Room } from "../types";
+import { EndTurnData, GameEvent, GameState, Room } from "../types";
 import { socket } from "../socketHandler";
 import { useRoom } from "../context/RoomContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -56,6 +56,22 @@ const GameHeader = () => {
     setHintLetters((e) => [...e, data]);
   }
 
+  function gameStateUpdate({
+    gameState,
+  }: {
+    gameState: GameState & { time: number };
+  }) {
+    if (interval) clearInterval(interval);
+    setTimer(gameState.time);
+    startInterval(
+      setInterval(() => {
+        setTimer((e) => (e > 0 ? e - 1 : e));
+      }, 1000)
+    );
+    setWord(gameState.word);
+    setHintLetters(gameState.hintLetters ?? []);
+  }
+
   useEffect(() => {
     socket.on(GameEvent.WORD_CHOSEN, initTimer);
     socket.on(GameEvent.GUESS_WORD_CHOSEN, initTimer);
@@ -64,6 +80,8 @@ const GameHeader = () => {
     socket.on(GameEvent.TURN_END, endTurn);
     socket.on(GameEvent.GUESS_HINT, hintLetter);
     socket.on(GameEvent.GAME_ENDED, endTurn);
+    socket.on(GameEvent.GAME_STATE, gameStateUpdate);
+
     return () => {
       socket.off(GameEvent.WORD_CHOSEN, initTimer);
       socket.off(GameEvent.GUESS_WORD_CHOSEN, initTimer);
@@ -72,6 +90,7 @@ const GameHeader = () => {
       socket.off(GameEvent.TURN_END, endTurn);
       socket.off(GameEvent.GAME_ENDED, endTurn);
       socket.off(GameEvent.GUESS_HINT, hintLetter);
+      socket.off(GameEvent.GAME_STATE, gameStateUpdate);
     };
   });
 

@@ -1,7 +1,8 @@
 import * as redis from "redis";
-import { promisify } from "util";
 import { Languages, Room } from "../types";
 import { configDotenv } from "dotenv";
+import { exec } from "child_process";
+
 configDotenv();
 
 const client = redis.createClient({
@@ -10,11 +11,28 @@ const client = redis.createClient({
 
 client.on("error", (err) => {
   console.error("Redis error:", err);
+  if (err.code === "ECONNREFUSED") {
+    // Start a docker contianer of redis
+    startRedisContainer();
+  }
 });
 
 client.connect().then(() => {
   console.log("Connect to redis");
 });
+
+const startRedisContainer = () => {
+  exec("docker run -d redis", (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error starting Redis container: ${error.message}`);
+      process.exit(1);
+    }
+    if (stderr) {
+      console.error(`Redis container stderr: ${stderr}`);
+    }
+    console.log(`Redis container started: ${stdout}`);
+  });
+};
 
 const ROOM_PREFIX = "room:";
 const PUBLIC_ROOM_PREFIX = "publicRoom:";
@@ -37,7 +55,6 @@ export async function setRedisRoom(roomId: string, roomData: Room) {
 }
 
 export async function deleteRedisRoom(roomId: string) {
-  console.log("Deleting room:", roomId);
   await client.del(`${PUBLIC_ROOM_PREFIX}${roomId}`);
   await client.del(`${ROOM_PREFIX}${roomId}`);
 }

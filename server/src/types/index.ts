@@ -4,6 +4,16 @@ export enum PlayerAppearance {
   MOUTH,
 }
 
+export enum RoomState {
+  NOT_STARTED = "NOT_STARTED",
+  PLAYER_CHOOSE_WORD = "PLAYER_CHOOSE_WORD",
+  CHOOSING_WORD = "CHOOSING_WORD",
+  DRAWING = "DRAWING",
+  GUESSED = "GUESSED",
+  TIMEUP = "TIMEUP",
+  WINNER = "WINNER",
+}
+
 export interface PlayerData {
   name: string;
   appearance: [number, number, number];
@@ -35,6 +45,8 @@ export interface GameState {
   word: string;
   currentPlayer: number;
   hintLetters: GuessedLetters[];
+  roomState: RoomState;
+  timerStartedAt: Date;
 }
 
 export interface GuessedLetters {
@@ -118,4 +130,5 @@ export enum GameEvent {
   SETTINGS_CHANGED = "settingsChanged",
   GUESS_FAIL = "guessFail",
   GUESS_HINT = "guessHint",
+  GAME_STATE = "gameState",
 }
