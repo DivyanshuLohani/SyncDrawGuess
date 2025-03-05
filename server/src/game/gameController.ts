@@ -42,6 +42,7 @@ export async function generateEmptyRoom(
       currentPlayer: 0,
       hintLetters: [],
       roomState: RoomState.NOT_STARTED,
+      timerStartedAt: new Date(),
     },
     settings: { ...DEFAULT_GAME_SETTINGS, language },
     isPrivate,

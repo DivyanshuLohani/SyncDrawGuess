@@ -98,6 +98,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
   function clearCanvas() {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
+
     if (ctx) {
       ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
@@ -111,7 +112,7 @@ const GameCanvas = ({ room }: { room: Room }) => {
       const data = drawData.current.pop();
       if (data?.end) break;
     }
-    if (drawData.current.length === 0) {
+    if (drawData.current.length != 0) {
       drawData.current[drawData.current.length - 1].end = true;
     }
     clearCanvas();
