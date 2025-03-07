@@ -267,6 +267,7 @@ export async function endGame(roomId: string, io: Server) {
   room.gameState.word = "";
   room.gameState.guessedWords = [];
   room.gameState.roomState = RoomState.NOT_STARTED;
+  room.vote_kickers = [];
   await setRedisRoom(roomId, room);
   io.to(roomId).emit(GameEvent.GAME_ENDED, { room, time: WINNER_SHOW_TIME });
 
@@ -522,4 +523,47 @@ export async function handleInBetweenJoin(
     time,
   };
   socket.emit(GameEvent.GAME_STATE, { gameState: gameStateWithoutWord });
+}
+
+export async function handleVoteKick(
+  socket: Socket,
+  io: Server,
+  playerId: string
+) {
+  const room = await getRoomFromSocket(socket);
+  if (!room) return;
+
+  const voteKickers = room.vote_kickers;
+  const player = room.players.find((e) => e.playerId === playerId);
+  if (!player) return;
+
+  const voter = room.players.find((e) => e.playerId === socket.id);
+  if (!voter) return;
+
+  const voteKicker = voteKickers.find((e) => e[0] === playerId);
+  if (!voteKicker) {
+    voteKickers.push([playerId, [voter.playerId]]);
+  } else {
+    if (voteKicker[1].includes(voter.playerId)) return;
+    voteKicker[1].push(voter.playerId);
+  }
+
+  const votesNeeded = Math.ceil(room.players.length / 2);
+  const votes = voteKickers.find((e) => e[0] === playerId)?.[1].length ?? 0;
+
+  io.to(room.roomId).emit(GameEvent.KICKING_VOTE, {
+    voter: voter.name,
+    player: player.name,
+    votes,
+    votesNeeded,
+  });
+
+  if (votes >= votesNeeded) {
+    room.players = room.players.filter((e) => e.playerId !== playerId);
+    room.vote_kickers = room.vote_kickers.filter((e) => e[0] !== playerId);
+    io.to(room.roomId).emit(GameEvent.PLAYER_LEFT, player);
+    io.to(playerId).emit(GameEvent.KICKED);
+    io.sockets.sockets.get(playerId)?.leave(room.roomId);
+  }
+  await setRedisRoom(room.roomId, room);
 }

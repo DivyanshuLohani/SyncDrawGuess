@@ -83,6 +83,7 @@ export interface Room {
   gameState: GameState; // Current state of the game
   settings: Settings;
   isPrivate: boolean;
+  vote_kickers: [string, string[]][];
 }
 
 export enum Languages {
@@ -111,6 +112,7 @@ export enum GameEvent {
   GUESS = "guess",
   CHANGE_SETTIING = "changeSettings",
   WORD_SELECT = "wordSelect",
+  VOTE_KICK = "voteKick",
 
   // Server Events
   JOINED_ROOM = "joinedRoom",
@@ -131,4 +133,6 @@ export enum GameEvent {
   GUESS_FAIL = "guessFail",
   GUESS_HINT = "guessHint",
   GAME_STATE = "gameState",
+  KICKING_VOTE = "kickVote",
+  KICKED = "kicked",
 }

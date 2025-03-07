@@ -46,6 +46,7 @@ export async function generateEmptyRoom(
     },
     settings: { ...DEFAULT_GAME_SETTINGS, language },
     isPrivate,
+    vote_kickers: [],
   };
 
   await setRedisRoom(roomId, room);

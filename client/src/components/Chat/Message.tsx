@@ -10,6 +10,7 @@ export enum MessageType {
   WordChoosen = "wordChosen",
   WordWas = "wordWas",
   Error = "error",
+  VoteKick = "voteKick",
 }
 export interface IMessage {
   sender: string;
@@ -73,6 +74,10 @@ export const Message = ({ message }: { message: IMessage }) => {
           The word was '<b>{message.message}</b>'
         </span>
       );
+      break;
+    case MessageType.VoteKick:
+      bgClass = "bg-neutral-100";
+      content = <span className="text-error-main">{message.message}</span>;
       break;
     default:
       break;

@@ -14,24 +14,17 @@ const Home: React.FC = () => {
   }
 
   useEffect(() => {
-    function onConnect() {
-      console.log("Connected to server");
+    function handleKicked() {
+      setRoom(null);
+      socket.disconnect();
     }
-
-    function onDisconnect() {
-      console.log("Disconnected from server");
-    }
-
-    socket.on("connect", onConnect);
-
-    socket.on("disconnect", onDisconnect);
 
     socket.on(GameEvent.JOINED_ROOM, handleRoomJoin);
+    socket.on(GameEvent.KICKED, handleKicked);
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
       socket.off(GameEvent.JOINED_ROOM, handleRoomJoin);
+      socket.off(GameEvent.KICKED, handleKicked);
     };
   }, []);
 

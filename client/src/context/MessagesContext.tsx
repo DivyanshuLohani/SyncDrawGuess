@@ -94,6 +94,27 @@ export default function MessagesContext({
     setMessages([]);
   }
 
+  function handleVoteKicking({
+    voter,
+    player: votee,
+    votes,
+    votesNeeded,
+  }: {
+    voter: string;
+    player: string;
+    votes: number;
+    votesNeeded: number;
+  }) {
+    setMessages([
+      ...messages,
+      {
+        sender: "",
+        message: `${voter} is voting to kick ${votee} (${votes}/${votesNeeded})`,
+        type: MessageType.VoteKick,
+      },
+    ]);
+  }
+
   useEffect(() => {
     if (me) {
       addPlayerJoinMessage(me);
@@ -110,6 +131,7 @@ export default function MessagesContext({
     socket.on(GameEvent.GUESSED, addGuessedMessage);
     socket.on(GameEvent.WORD_CHOSEN, addWordChosen);
     socket.on(GameEvent.TURN_END, addWordWas);
+    socket.on(GameEvent.KICKING_VOTE, handleVoteKicking);
     socket.on("error", addErrorMessage);
 
     return () => {
@@ -120,6 +142,7 @@ export default function MessagesContext({
       socket.off(GameEvent.GUESSED, addGuessedMessage);
       socket.off(GameEvent.WORD_CHOSEN, addWordChosen);
       socket.off(GameEvent.TURN_END, addWordWas);
+      socket.on(GameEvent.KICKING_VOTE, handleVoteKicking);
       socket.off("error", addErrorMessage);
     };
   });

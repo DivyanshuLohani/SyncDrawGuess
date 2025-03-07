@@ -22,6 +22,7 @@ import {
   handleNewRoom,
   handlePlayerLeft,
   handleSettingsChange,
+  handleVoteKick,
   startGame,
   wordSelected,
 } from "../game/roomController";
@@ -107,6 +108,10 @@ export function setupSocket(io: Server) {
     socket.on(GameEvent.DISCONNECT, async () => {
       console.log("User disconnected:", socket.id);
       handlePlayerLeft(socket, io);
+    });
+
+    socket.on(GameEvent.VOTE_KICK, (playerId: string) => {
+      handleVoteKick(socket, io, playerId);
     });
   });
 }

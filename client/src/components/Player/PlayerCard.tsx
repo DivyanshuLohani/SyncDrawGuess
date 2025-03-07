@@ -1,4 +1,4 @@
-import { Player } from "../../types";
+import { GameEvent, Player } from "../../types";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { useRoom } from "../../context/RoomContext";
@@ -21,6 +21,11 @@ export default function PlayerCard({
   const [isOpen, setIsOpen] = useState(false);
   const isPlayerSelf = player.playerId === socket.id;
   const isMuted = mutedPlayers.includes(player.playerId);
+
+  const handleVoteKick = () => {
+    socket.emit(GameEvent.VOTE_KICK, player.playerId);
+    setIsOpen(false);
+  };
 
   const onClose = () => {
     setIsOpen(false);
@@ -83,7 +88,11 @@ export default function PlayerCard({
             </>
             {!isPlayerSelf && (
               <>
-                <Button size="md" className="font-bold">
+                <Button
+                  size="md"
+                  className="font-bold"
+                  onClick={handleVoteKick}
+                >
                   Vote Kick
                 </Button>
                 <Button
