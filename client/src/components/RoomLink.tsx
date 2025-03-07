@@ -1,11 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRoom } from "../context/RoomContext";
 import { LinkIcon } from "lucide-react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import Button from "./ui/Button";
+import clsx from "clsx";
 
-const RoomLink: React.FC = () => {
+const RoomLink = ({ className }: { className?: string }) => {
   const shiftPressed = useRef(false);
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -64,7 +65,7 @@ const RoomLink: React.FC = () => {
     >
       <Button
         onClick={handleCopy}
-        className="w-2/5"
+        className={clsx("w-2/5", className)}
         startIcon={<LinkIcon className="w-4 h-4 inline-block mr-2" />}
       >
         <span>Invite</span>

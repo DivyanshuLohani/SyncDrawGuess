@@ -1,4 +1,4 @@
-import PlayerScores from "./PlayerScroes";
+import PlayerScores from "./PlayerScores";
 import GameCanvas from "./GameCanvas";
 import Chat from "./Chat";
 import { Room } from "../types";
@@ -17,11 +17,11 @@ const Game = ({ room }: { room: Room }) => {
   return (
     <MessagesContext>
       <Logo />
+      <GameHeader />
       <div className="flex flex-grow flex-col sm:flex-row justify-center w-full h-screen ">
         <AudioManager />
         <div className="flex-col">{!isMobile && <PlayerScores />}</div>
         <div>
-          <GameHeader />
           <div className="relative overflow-hidden">
             <GameCanvas room={room} />
             <OverlayContent />

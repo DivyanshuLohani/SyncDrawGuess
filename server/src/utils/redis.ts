@@ -13,7 +13,7 @@ client.on("error", (err) => {
   console.error("Redis error:", err);
   if (err.code === "ECONNREFUSED") {
     // Start a docker contianer of redis
-    startRedisContainer();
+    // startRedisContainer();
   }
 });
 

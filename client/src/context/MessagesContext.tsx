@@ -19,10 +19,11 @@ export default function MessagesContext({
   children: React.ReactNode;
 }) {
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const { currentPlayer, me, myTurn } = useRoom();
+  const { currentPlayer, me, myTurn, mutedPlayers } = useRoom();
 
   function addMessageToChat(message: string, player: Player) {
     if (player.guessed && player.playerId != socket.id) return;
+    if (mutedPlayers.includes(player.playerId)) return;
     if (myTurn) {
       setMessages([
         ...messages,

@@ -127,7 +127,7 @@ const GameHeader = () => {
   }
 
   return (
-    <div className="w-full bg-background-paper rounded-lg text-primary font-bold py-2 px-4 flex items-center justify-between z-50 border-2 border-primary-400 text-center">
+    <div className=" mx-auto bg-background-paper rounded-lg text-primary font-bold py-2 px-4 flex items-center justify-between z-50 border-2 border-primary-400 text-center">
       <span className="text-lg font-semibold">{timer}</span>
       <span className="text-xl font-bold self-center flex gap-5 relative select-none">
         <AnimatePresence>{renderWord()}</AnimatePresence>

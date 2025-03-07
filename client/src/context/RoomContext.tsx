@@ -34,6 +34,9 @@ interface RoomContextValue {
   me: Player | null;
   roomState: RoomState;
   isPrivateRoom: boolean;
+  mutePlayer: (playerId: string) => void;
+  removeMute: (playerId: string) => void;
+  mutedPlayers: string[];
 }
 const RoomContext = createContext<RoomContextValue | undefined>(undefined);
 
@@ -80,6 +83,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [myTurn, setIsmyTrun] = useState(false);
   const [me, setMe] = useState<Player | null>(null);
   const [roomState, setRoomState] = useState<RoomState>(RoomState.NOT_STARTED);
+  const [mutedPlayers, setMutedPlayers] = useState<string[]>([]);
 
   useEffect(() => {
     console.log(myTurn);
@@ -162,6 +166,15 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setRoomState(gameState.roomState);
   }
 
+  function mutePlayer(playerId: string) {
+    setMutedPlayers((prevMutedPlayers) => [...prevMutedPlayers, playerId]);
+  }
+  function removeMute(playerId: string) {
+    setMutedPlayers((prevMutedPlayers) =>
+      prevMutedPlayers.filter((id) => id !== playerId)
+    );
+  }
+
   useEffect(() => {
     socket.on(GameEvent.JOINED_ROOM, joinedRoom);
     socket.on(GameEvent.WORD_CHOSEN, wordChosen);
@@ -209,6 +222,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     me,
     roomState: roomState,
     isPrivateRoom: room.isPrivate,
+    mutePlayer,
+    removeMute,
+    mutedPlayers,
   };
 
   return (
